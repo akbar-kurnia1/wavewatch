@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
 import surfApi from '../services/surfApi';
+import WaveHeightChart from '../components/WaveHeightChart';
 
 const SurfContainer = styled.div`
   max-width: 1200px;
@@ -152,6 +153,9 @@ const SurfPage = () => {
                         <div>Tide: <strong>{surfData.currentConditions?.tide || 'N/A'}ft</strong></div>
                       </div>
                     </div>
+
+                    {/* Wave Height Chart */}
+                    <WaveHeightChart hourlyForecast={surfData.hourlyForecast} />
 
                     {/* Best Surf Times */}
                     <div style={{ marginBottom: '2rem' }}>

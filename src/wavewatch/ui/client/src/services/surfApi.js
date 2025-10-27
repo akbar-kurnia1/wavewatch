@@ -99,4 +99,6 @@ class SurfApiService {
   }
 }
 
-export default new SurfApiService();
+const surfApiService = new SurfApiService();
+
+export default surfApiService;
