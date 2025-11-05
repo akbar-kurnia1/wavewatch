@@ -45,6 +45,7 @@ const WaveHeightChart = ({ hourlyForecast }) => {
       time: time,
       waveHeight: parseFloat(hour.waveHeight || hour.wave_height) || 0,
       windSpeed: parseFloat(hour.windSpeed || hour.wind_speed) || 0,
+      windDirection: parseFloat(hour.windDirection || hour.wind_direction) || 0,
       tide: parseFloat(hour.tide) || 0,
       airTemperature: parseFloat(hour.airTemperature || hour.air_temperature) || 0,
       fullTime: hour.time
@@ -67,14 +68,29 @@ const WaveHeightChart = ({ hourlyForecast }) => {
   const WindSpeedTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const direction = getWindDirectionText(data.windDirection);
       return (
         <CustomTooltip>
           <p><strong>Time:</strong> {label}</p>
           <p><strong>Wind Speed:</strong> {data.windSpeed}mph</p>
+          <p><strong>Wind Direction:</strong> {direction} ({data.windDirection}°)</p>
         </CustomTooltip>
       );
     }
     return null;
+  };
+
+  // Helper function to convert wind direction degrees to text
+  const getWindDirectionText = (degrees) => {
+    if (degrees >= 337.5 || degrees < 22.5) return 'N';
+    if (degrees >= 22.5 && degrees < 67.5) return 'NE';
+    if (degrees >= 67.5 && degrees < 112.5) return 'E';
+    if (degrees >= 112.5 && degrees < 157.5) return 'SE';
+    if (degrees >= 157.5 && degrees < 202.5) return 'S';
+    if (degrees >= 202.5 && degrees < 247.5) return 'SW';
+    if (degrees >= 247.5 && degrees < 292.5) return 'W';
+    if (degrees >= 292.5 && degrees < 337.5) return 'NW';
+    return 'N';
   };
 
   if (!hourlyForecast || hourlyForecast.length === 0) {
@@ -181,6 +197,7 @@ const WaveHeightChart = ({ hourlyForecast }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
     </ChartContainer>
   );
 };

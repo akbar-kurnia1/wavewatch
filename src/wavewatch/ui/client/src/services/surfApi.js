@@ -33,13 +33,13 @@ class SurfApiService {
       beachName: beachName,
       date: date,
       currentConditions: {
-        waveHeight: 3.2,
-        wavePeriod: 12,
-        waveDirection: 245,
-        windSpeed: 8,
-        windDirection: 180,
-        waterTemperature: 62,
-        airTemperature: 68,
+        wave_height: 3.2,
+        wave_period: 12,
+        wave_direction: 245,
+        wind_speed: 8,
+        wind_direction: 250,
+        water_temperature: 62,
+        air_temperature: 68,
         tide: 2.1,
         pressure: 1013,
         humidity: 75,
@@ -48,12 +48,12 @@ class SurfApiService {
         precipitation: 0
       },
       hourlyForecast: [
-        { time: '06:00', waveHeight: 2.8, windSpeed: 6, tide: 1.8, airTemperature: 65 },
-        { time: '09:00', waveHeight: 3.2, windSpeed: 8, tide: 2.1, airTemperature: 68 },
-        { time: '12:00', waveHeight: 3.5, windSpeed: 10, tide: 2.4, airTemperature: 72 },
-        { time: '15:00', waveHeight: 3.8, windSpeed: 12, tide: 2.1, airTemperature: 75 },
-        { time: '18:00', waveHeight: 3.2, windSpeed: 9, tide: 1.9, airTemperature: 73 },
-        { time: '21:00', waveHeight: 2.9, windSpeed: 7, tide: 1.6, airTemperature: 70 }
+        { time: '06:00', waveHeight: 2.8, windSpeed: 6, windDirection: 245, tide: 1.8, airTemperature: 65 },
+        { time: '09:00', waveHeight: 3.2, windSpeed: 8, windDirection: 250, tide: 2.1, airTemperature: 68 },
+        { time: '12:00', waveHeight: 3.5, windSpeed: 10, windDirection: 255, tide: 2.4, airTemperature: 72 },
+        { time: '15:00', waveHeight: 3.8, windSpeed: 12, windDirection: 260, tide: 2.1, airTemperature: 75 },
+        { time: '18:00', waveHeight: 3.2, windSpeed: 9, windDirection: 265, tide: 1.9, airTemperature: 73 },
+        { time: '21:00', waveHeight: 2.9, windSpeed: 7, windDirection: 270, tide: 1.6, airTemperature: 70 }
       ],
       bestSurfTimes: [
         { time: '06:00', rating: 8, reason: 'Clean conditions, good wave height' },

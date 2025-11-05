@@ -4,7 +4,8 @@ LLM summarizer using Google Gemini for surf condition analysis.
 
 from google import genai
 import os
-from typing import Optional
+import re
+from typing import Optional, List, Dict
 from .prompt_templates import SURF_CONDITIONS_PROMPT, ONE_SENTENCE_SUMMARY_PROMPT
 
 
@@ -182,3 +183,153 @@ Hour {i+1} ({time_str}):
             
         except Exception as e:
             return f"Error formatting surf data: {str(e)}"
+    
+    def parse_best_times_from_analysis(self, ai_analysis_text: str) -> List[Dict]:
+        """
+        Parse best surf times from AI analysis text.
+        
+        Args:
+            ai_analysis_text: The full AI analysis text containing best times section
+            
+        Returns:
+            List of dictionaries with best times data
+        """
+        best_times = []
+        
+        try:
+            # Look for the "Best Time to Surf" section (singular - only one time)
+            # Pattern to match the section that comes after "2. **Best Time to Surf:**" or "Best Time to Surf:**"
+            # The new format has the time after the colon: "Best Time to Surf:** 8:00 AM - 9:00 AM"
+            best_times_pattern = r'(?i)(?:2\.\s*\*\*best time to surf\*\*:?\s*\*\*|best time to surf:?\s*\*\*)[:\s]*(.*?)(?=\*\*3\.|3\.\s*\*\*|specific recommendations|notable changes|$)'
+            
+            # Find the best times section
+            best_times_match = re.search(best_times_pattern, ai_analysis_text, re.DOTALL)
+            
+            if not best_times_match:
+                # Try alternative patterns (handle variations)
+                best_times_pattern = r'(?i)(?:2\.\s*\*\*best times to surf\*\*:|best times to surf:)[:\s]*(.*?)(?=\*\*3\.|3\.\s*\*\*|specific recommendations|notable changes|$)'
+                best_times_match = re.search(best_times_pattern, ai_analysis_text, re.DOTALL)
+            
+            if not best_times_match:
+                # Try without colon
+                best_times_pattern = r'(?i)best time to surf.*?\n(.*?)(?=\n\*\*|\n\d+\.\s*\*\*|specific recommendations|notable changes|$)'
+                best_times_match = re.search(best_times_pattern, ai_analysis_text, re.DOTALL)
+            
+            if not best_times_match:
+                return []
+            
+            best_times_section = best_times_match.group(1)
+            
+            # The new format has the time at the start after "Best Time to Surf:"
+            # Format: "Best Time to Surf: 8:00 AM - 9:00 AM\n    *   Rating: 80/100\n    ..."
+            # Since we're only getting ONE time, the entire section is one entry
+            # Extract time from the beginning of the section (could be on same line or next line)
+            time_at_start = re.search(r'^([0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm)?(?:\s*[-–—]\s*[0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm))?)[:\s]*', best_times_section, re.IGNORECASE | re.MULTILINE)
+            
+            if time_at_start:
+                # Single entry - the entire section
+                entries = [best_times_section]
+            else:
+                # Fallback: try finding time ranges with colons or list format
+                time_pattern = r'([0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm)?(?:\s*[-–—]\s*[0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm))?):?'
+                matches = list(re.finditer(time_pattern, best_times_section, re.IGNORECASE))
+                
+                if matches:
+                    entries = []
+                    for i, match in enumerate(matches):
+                        start = match.start()
+                        end = matches[i + 1].start() if i + 1 < len(matches) else len(best_times_section)
+                        entries.append(best_times_section[start:end])
+                else:
+                    # No time found, use entire section as one entry
+                    entries = [best_times_section]
+            
+            for entry_text in entries:
+                entry_text = entry_text.strip()
+                if not entry_text:
+                    continue
+                
+                # Extract time - in new format it's at the start: "8:00 AM - 9:00 AM\n    *   Rating:..."
+                # Or could be: "Best Time to Surf: 8:00 AM - 9:00 AM" (already extracted in section)
+                time_match = re.search(r'([0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm)?(?:\s*[-–—]\s*[0-9]{1,2}[:.]?[0-9]{0,2}\s*(?:AM|PM|am|pm))?)[:\s]*', entry_text, re.IGNORECASE)
+                if not time_match:
+                    continue
+                
+                time_str = time_match.group(1).strip()
+                # Clean up time if it has a trailing colon
+                if time_str.endswith(':'):
+                    time_str = time_str[:-1].strip()
+                
+                # Extract rating (1-100) - handle formats like "*   Rating: 80/100" or "Rating: 80"
+                rating_match = re.search(r'(?:\*\s*)?(?:rating|score|rated)[:\s]*(\d{1,3})(?:\s*/?\s*100)?', entry_text, re.IGNORECASE)
+                rating = int(rating_match.group(1)) if rating_match else None
+                
+                # Extract wave height range - handle formats like "*   Wave Height: 5.6-5.7ft"
+                wave_match = re.search(r'(?:\*\s*)?wave[^\d]*?(?:height|size)?[:\s]*(\d+\.?\d*\s*[-–—]\s*\d+\.?\d*ft)', entry_text, re.IGNORECASE)
+                if not wave_match:
+                    # Fallback to single value
+                    wave_match = re.search(r'(?:\*\s*)?wave[^\d]*?(?:height|size)?[:\s]*(\d+\.?\d*ft)', entry_text, re.IGNORECASE)
+                wave_height_range = wave_match.group(1).strip() if wave_match else None
+                
+                # Extract period - handle formats like "*   Wave Period: 12s"
+                period_match = re.search(r'(?:\*\s*)?period[^\d]*?[:\s]*(\d+)\s*s(?:ec(?:ond)?s?)?', entry_text, re.IGNORECASE)
+                period = int(period_match.group(1)) if period_match else None
+                
+                # Extract wind speed range - handle formats like "*   Wind Speed: 2.9-3.3mph"
+                wind_match = re.search(r'(?:\*\s*)?wind[^\d]*?(?:speed)?[:\s]*(\d+\.?\d*\s*[-–—]\s*\d+\.?\d*mph)', entry_text, re.IGNORECASE)
+                if not wind_match:
+                    # Fallback to single value
+                    wind_match = re.search(r'(?:\*\s*)?wind[^\d]*?(?:speed)?[:\s]*(\d+\.?\d*mph)', entry_text, re.IGNORECASE)
+                wind_speed_range = wind_match.group(1).strip() if wind_match else None
+                
+                # Extract explanation - look for "Explanation:" marker
+                explanation_match = re.search(r'explanation[:\s]+(.+?)(?=\n\s*(?:specific recommendations|notable changes|\d+\.\s*\*\*|$))', entry_text, re.IGNORECASE | re.DOTALL)
+                if not explanation_match:
+                    # Fallback: find "Explanation:" anywhere and get everything after
+                    explanation_match = re.search(r'(?:\*\*)?explanation[:\s]+(.+)', entry_text, re.IGNORECASE | re.DOTALL)
+                
+                if explanation_match:
+                    reason = explanation_match.group(1).strip()
+                else:
+                    # Fallback: try old format with "reason" keyword
+                    reason_match = re.search(r'(?:reason|explanation)[:\s]+(.+)', entry_text, re.IGNORECASE | re.DOTALL)
+                    if reason_match:
+                        reason = reason_match.group(1).strip()
+                    else:
+                        reason = None
+                
+                # Clean up the explanation text - preserve newlines but clean up markdown
+                if reason:
+                    # Remove markdown formatting
+                    reason = re.sub(r'\*\*', '', reason)
+                    reason = re.sub(r'\*', '', reason)
+                    # Preserve newlines but normalize multiple spaces within lines
+                    # Replace multiple spaces with single space, but keep newlines
+                    reason = re.sub(r'[ \t]+', ' ', reason)  # Normalize spaces/tabs but keep newlines
+                    reason = re.sub(r'\n[ \t]*\n+', '\n\n', reason)  # Normalize multiple newlines to double newline max
+                    reason = reason.strip()
+                    # Remove trailing colons
+                    reason = re.sub(r'[:]\s*$', '', reason).strip()
+                
+                # Only add if we have at least a time
+                if time_str:
+                    best_times.append({
+                        'time': time_str,
+                        'rating': rating,
+                        'wave_height_range': wave_height_range,
+                        'period': period,
+                        'wind_speed_range': wind_speed_range,
+                        'reason': reason if reason else None
+                    })
+            
+            # Sort by rating (highest first)
+            best_times.sort(key=lambda x: x.get('rating', 0) or 0, reverse=True)
+            
+            # Return only the single best time
+            return best_times[:1] if best_times else []
+            
+        except Exception as e:
+            print(f"Error parsing best times from AI analysis: {e}")
+            import traceback
+            traceback.print_exc()
+            return []

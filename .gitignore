@@ -32,6 +32,7 @@ venv.bak/
 src/wavewatch/ui/node_modules/
 src/wavewatch/ui/client/node_modules/
 src/wavewatch/ui/server/node_modules/
+src/wavewatch/ui/client/build/
 src/wavewatch/ui/.env
 src/wavewatch/ui/.env.local
 src/wavewatch/ui/.env.development.local

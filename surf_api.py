@@ -57,7 +57,7 @@ async def get_surf_data(beach_name: str, date: str):
         # Initialize variables for data
         current_conditions = {}
         hourly_forecast = []
-        best_surf_times = []
+        best_surf_times = []  # Will be populated from AI analysis
         surf_data_for_ai = {}
         
         # Check MongoDB cache first for Stormglass data
@@ -71,7 +71,7 @@ async def get_surf_data(beach_name: str, date: str):
                 stormglass_cached = True
                 # Use cached data instead of making API calls
                 hourly_forecast = cached_stormglass.get('hourly_forecast', [])
-                best_surf_times = cached_stormglass.get('best_surf_times', [])
+                # Note: best_surf_times will come from AI analysis, not from cached Stormglass data
                 
                 # Extract current conditions from the first hour of hourly_forecast
                 if hourly_forecast and len(hourly_forecast) > 0:
@@ -101,13 +101,11 @@ async def get_surf_data(beach_name: str, date: str):
             current_conditions_result = data_fetcher.get_current_conditions(beach_name, target_date=date)
             # Get hourly forecast
             hourly_forecast_result = data_fetcher.get_hourly_conditions(beach_name, target_date=date)
-            # Get best surf times
-            best_surf_times_result = data_fetcher.get_best_surf_times(beach_name, target_date=date)
             
             # Extract the data from results
             current_conditions = current_conditions_result.get('current_conditions', {})
             hourly_forecast = hourly_forecast_result.get('hourly_conditions', [])
-            best_surf_times = best_surf_times_result.get('best_times', [])
+            # Note: best_surf_times will now come from AI analysis instead of manual calculation
             
             # Get surf data for AI analysis
             surf_data_result = data_fetcher.fetch_surf_data(beach_name, target_date=date)
@@ -134,7 +132,7 @@ async def get_surf_data(beach_name: str, date: str):
                     "date": date,
                     "current_conditions": current_conditions_for_cache,
                     "hourly_forecast": hourly_forecast,
-                    "best_surf_times": best_surf_times
+                    # Note: best_surf_times removed from stormglass cache as it's now AI-generated
                 }
                 cache_save_response = requests.post("http://localhost:5001/api/stormglass", json=stormglass_cache_data)
                 if cache_save_response.status_code == 200:
@@ -155,8 +153,22 @@ async def get_surf_data(beach_name: str, date: str):
                 # Check if cached_data is a dict, not a list
                 if isinstance(cached_data, dict):
                     print("📦 Using cached AI responses from MongoDB")
-                    ai_analysis = cached_data.get('ai_analysis', {}).get('text', 'No cached analysis')
+                    # Get AI analysis text (could be stored as dict with 'text' key or as plain string)
+                    ai_analysis_dict = cached_data.get('ai_analysis', {})
+                    if isinstance(ai_analysis_dict, dict):
+                        ai_analysis = ai_analysis_dict.get('text', '')
+                    else:
+                        ai_analysis = cached_data.get('ai_analysis', '')
+                    
                     one_sentence_summary = cached_data.get('one_sentence_summary', 'No cached summary')
+                    
+                    # Always parse best times from AI analysis (ignore old cached format)
+                    if ai_analysis:
+                        best_surf_times = summarizer.parse_best_times_from_analysis(ai_analysis)
+                        print(f"✅ Parsed {len(best_surf_times)} best times from cached AI analysis")
+                    else:
+                        print("⚠️ No AI analysis in cache, using empty best times")
+                        best_surf_times = []
                 else:
                     print(f"Warning: Unexpected cache data type: {type(cached_data)}")
                     raise Exception(f"Cache data is not a dictionary: {type(cached_data)}")
@@ -167,7 +179,11 @@ async def get_surf_data(beach_name: str, date: str):
                 
                 ai_analysis = ai_analysis_text
                 
+                # Parse best times from AI analysis
+                best_surf_times = summarizer.parse_best_times_from_analysis(ai_analysis_text)
+                
                 # Cache the response in MongoDB
+                
                 cache_data = {
                     "beach_name": beach_name,
                     "date": date,
@@ -197,6 +213,9 @@ async def get_surf_data(beach_name: str, date: str):
             one_sentence_summary = summarizer.get_one_sentence_summary(beach_name, surf_data_for_ai, date)
             
             ai_analysis = ai_analysis_text
+            
+            # Parse best times from AI analysis
+            best_surf_times = summarizer.parse_best_times_from_analysis(ai_analysis_text)
         
         
         # Format response for React frontend

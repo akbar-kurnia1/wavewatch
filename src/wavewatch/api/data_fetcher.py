@@ -51,6 +51,7 @@ class StormglassDataFetcher:
             "el segundo": "9410660",    # Los Angeles, CA
             "scripps": "9410230",       # La Jolla, CA
             "tourmaline": "9410230",    # La Jolla, CA
+            "linda mar": "9414290",     # San Francisco, CA (Presidio - closest to Pacifica)
         }
         
         # Station-specific offsets for subordinate stations
@@ -124,6 +125,7 @@ class StormglassDataFetcher:
             "lowers": (33.3703, -117.5681),
             "scripps": (32.8667, -117.2500),
             "tourmaline": (32.8000, -117.2667),
+            "linda mar": (37.5986, -122.5006),  # Pacifica, CA
         }
     
     def _load_cache(self) -> Dict:

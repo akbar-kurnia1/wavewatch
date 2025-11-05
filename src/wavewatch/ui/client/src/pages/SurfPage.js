@@ -148,6 +148,7 @@ const SurfPage = () => {
                         <div>Wave Height: <strong>{surfData.currentConditions?.wave_height || 'N/A'}ft</strong></div>
                         <div>Wave Period: <strong>{surfData.currentConditions?.wave_period || 'N/A'}s</strong></div>
                         <div>Wind Speed: <strong>{surfData.currentConditions?.wind_speed || 'N/A'}mph</strong></div>
+                        <div>Wind Direction: <strong>{surfData.currentConditions?.wind_direction || 'N/A'}°</strong></div>
                         <div>Water Temp: <strong>{surfData.currentConditions?.water_temperature || 'N/A'}°F</strong></div>
                         <div>Air Temp: <strong>{surfData.currentConditions?.air_temperature || 'N/A'}°F</strong></div>
                         <div>Tide: <strong>{surfData.currentConditions?.tide || 'N/A'}ft</strong></div>
@@ -162,12 +163,32 @@ const SurfPage = () => {
                       <h4>🏄‍♂️ Best Surf Times</h4>
                       {Array.isArray(surfData.bestSurfTimes) && surfData.bestSurfTimes.length > 0 ? (
                         surfData.bestSurfTimes.map((time, index) => (
-                          <div key={index} style={{ margin: '0.5rem 0', padding: '0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '5px' }}>
-                            <strong>{new Date(time.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</strong> - 
-                            Wave: {time.wave_height}ft - 
-                            Period: {time.wave_period}s - 
-                            Wind: {time.wind_speed}mph - 
-                            Score: {time.score}/50
+                          <div key={index} style={{ margin: '1rem 0', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: '1.1rem', color: '#4A90E2' }}>{time.time || 'N/A'}</strong>
+                              {time.rating && (
+                                <span style={{ background: 'rgba(74, 144, 226, 0.3)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontWeight: 'bold' }}>
+                                  Rating: {time.rating}/100
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
+                              {time.wave_height_range && (
+                                <div>🌊 Wave: <strong>{time.wave_height_range}</strong></div>
+                              )}
+                              {time.period && (
+                                <div>⏱️ Period: <strong>{time.period}s</strong></div>
+                              )}
+                              {time.wind_speed_range && (
+                                <div>💨 Wind: <strong>{time.wind_speed_range}</strong></div>
+                              )}
+                            </div>
+                            {time.reason && (
+                              <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.6', color: '#E8F4FD' }}>
+                                <strong style={{ color: '#7BB3F0', display: 'block', marginBottom: '0.5rem' }}>Why this time:</strong>
+                                <div style={{ whiteSpace: 'pre-line' }}>{time.reason}</div>
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
