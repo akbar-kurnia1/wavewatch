@@ -198,6 +198,30 @@ const SurfPage = () => {
                       )}
                     </div>
 
+                    {/* Break-Specific Ideal Conditions */}
+                    {surfData.breakSpecificConditions && surfData.breakSpecificConditions.trim() !== "" && 
+                     surfData.breakSpecificConditions !== "No break-specific information available. Using general surf forecasting principles." && (
+                      <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(74, 144, 226, 0.1)', borderRadius: '8px', border: '1px solid rgba(74, 144, 226, 0.3)' }}>
+                        <h4 style={{ color: '#4A90E2', marginBottom: '0.75rem' }}>📍 Ideal Conditions for {surfData.beachName}</h4>
+                        <div style={{ lineHeight: '1.6', color: '#E8F4FD', fontSize: '0.95rem' }}>
+                          <ReactMarkdown
+                            components={{
+                              h1: ({children}) => <h1 style={{color: '#7BB3F0', fontSize: '1.1rem', margin: '0.8rem 0 0.4rem 0', fontWeight: 'bold'}}>{children}</h1>,
+                              h2: ({children}) => <h2 style={{color: '#7BB3F0', fontSize: '1rem', margin: '0.7rem 0 0.3rem 0', fontWeight: 'bold'}}>{children}</h2>,
+                              h3: ({children}) => <h3 style={{color: '#7BB3F0', fontSize: '0.95rem', margin: '0.6rem 0 0.3rem 0', fontWeight: 'bold'}}>{children}</h3>,
+                              p: ({children}) => <p style={{margin: '0.4rem 0', color: '#E8F4FD'}}>{children}</p>,
+                              strong: ({children}) => <strong style={{color: '#7BB3F0', fontWeight: 'bold'}}>{children}</strong>,
+                              ul: ({children}) => <ul style={{margin: '0.4rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ul>,
+                              li: ({children}) => <li style={{margin: '0.25rem 0', color: '#E8F4FD'}}>{children}</li>,
+                              ol: ({children}) => <ol style={{margin: '0.4rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ol>
+                            }}
+                          >
+                            {surfData.breakSpecificConditions}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
             {/* AI Analysis */}
             <div>
               <h4>🤖 AI Analysis</h4>

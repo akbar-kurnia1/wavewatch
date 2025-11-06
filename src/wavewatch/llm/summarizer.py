@@ -6,7 +6,7 @@ from google import genai
 import os
 import re
 from typing import Optional, List, Dict
-from .prompt_templates import SURF_CONDITIONS_PROMPT, ONE_SENTENCE_SUMMARY_PROMPT
+from .prompt_templates import SURF_CONDITIONS_PROMPT, ONE_SENTENCE_SUMMARY_PROMPT, BREAK_SPECIFIC_CONDITIONS_EXTRACTION_PROMPT
 
 
 class SurfSummarizer:
@@ -27,7 +27,96 @@ class SurfSummarizer:
         
         self.client = genai.Client(api_key=api_key)
     
-    def get_surf_conditions(self, surf_beach: str, surf_data: dict = None, selected_date: str = None) -> str:
+    def _search_break_specific_conditions(self, beach_name: str) -> str:
+        """
+        Search the web for break-specific surf conditions for a beach.
+        
+        Args:
+            beach_name: Name of the surf beach/break
+            
+        Returns:
+            Combined search results as a string
+        """
+        try:
+            # Try to use duckduckgo-search if available
+            try:
+                from duckduckgo_search import DDGS
+                
+                search_queries = [
+                    f"{beach_name} surf conditions ideal swell direction tide",
+                    f"{beach_name} surf break best conditions local knowledge",
+                    f"{beach_name} surf forecast dangerous conditions"
+                ]
+                
+                all_results = []
+                with DDGS() as ddgs:
+                    for query in search_queries:
+                        try:
+                            results = list(ddgs.text(query, max_results=5))
+                            for result in results:
+                                all_results.append({
+                                    'title': result.get('title', ''),
+                                    'body': result.get('body', ''),
+                                    'url': result.get('href', '')
+                                })
+                        except Exception as e:
+                            print(f"Error searching for query '{query}': {e}")
+                            continue
+                
+                # Format results as a string for the extraction prompt
+                if all_results:
+                    formatted_results = []
+                    for i, result in enumerate(all_results[:15], 1):  # Limit to 15 results
+                        formatted_results.append(
+                            f"Result {i}:\n"
+                            f"Title: {result['title']}\n"
+                            f"URL: {result['url']}\n"
+                            f"Content: {result['body']}\n"
+                        )
+                    return "\n\n".join(formatted_results)
+                else:
+                    return ""
+                    
+            except ImportError:
+                # Fallback: duckduckgo-search not installed
+                print("⚠️ duckduckgo-search not installed. Install with: pip install duckduckgo-search")
+                print("   Continuing without break-specific web search...")
+                return ""
+                
+        except Exception as e:
+            print(f"Error searching for break-specific conditions: {e}")
+            return ""
+    
+    def _extract_break_specific_conditions(self, beach_name: str, search_results: str) -> str:
+        """
+        Extract break-specific conditions from web search results using Gemini.
+        
+        Args:
+            beach_name: Name of the beach
+            search_results: Combined search results from web search
+            
+        Returns:
+            Extracted break-specific conditions as formatted string
+        """
+        try:
+            if not search_results or search_results.strip() == "":
+                return "No break-specific information available. Using general surf forecasting principles."
+            
+            prompt = BREAK_SPECIFIC_CONDITIONS_EXTRACTION_PROMPT.format(
+                beach_name=beach_name,
+                search_results=search_results
+            )
+            
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-001',
+                contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            print(f"Error extracting break-specific conditions: {e}")
+            return "Error extracting break-specific conditions. Using general surf forecasting principles."
+    
+    def get_surf_conditions(self, surf_beach: str, surf_data: dict = None, selected_date: str = None, use_break_specific: bool = True) -> tuple:
         """
         Get surf conditions summary for a specific beach using real surf data.
         
@@ -37,28 +126,46 @@ class SurfSummarizer:
             selected_date: Selected date for analysis (optional)
             
         Returns:
-            String containing surf conditions summary
+            Tuple of (surf conditions summary, break_specific_conditions)
         """
         try:
             if surf_data:
+                # Step 1: Get break-specific conditions (if enabled)
+                break_specific_conditions = "No break-specific information available. Using general surf forecasting principles."
+                
+                if use_break_specific:
+                    print(f"🔍 Searching for break-specific conditions for {surf_beach}...")
+                    search_results = self._search_break_specific_conditions(surf_beach)
+                    
+                    if search_results:
+                        print(f"📝 Extracting break-specific conditions from search results...")
+                        break_specific_conditions = self._extract_break_specific_conditions(surf_beach, search_results)
+                        print(f"✅ Break-specific conditions extracted")
+                    else:
+                        print(f"⚠️ No search results found, using general principles")
+                
                 # Format the surf data for the prompt
                 formatted_data = self._format_surf_data(surf_data)
+                
+                # Step 2: Generate final forecast with break-specific conditions
                 prompt = SURF_CONDITIONS_PROMPT.format(
-                    surf_beach=surf_beach, 
+                    surf_beach=surf_beach,
+                    break_specific_conditions=break_specific_conditions,
                     surf_data=formatted_data,
                     selected_date=selected_date or "today"
                 )
             else:
                 # Fallback to general knowledge if no data provided
                 prompt = f"Provide general surf information about {surf_beach} surf break."
+                break_specific_conditions = ""
             
             response = self.client.models.generate_content(
                 model='gemini-2.0-flash-001',
                 contents=prompt
             )
-            return response.text
+            return response.text, break_specific_conditions
         except Exception as e:
-            return f"Error generating surf conditions: {str(e)}"
+            return f"Error generating surf conditions: {str(e)}", ""
     
     def get_one_sentence_summary(self, beach_name: str, surf_data: dict, selected_date: str = None) -> str:
         """

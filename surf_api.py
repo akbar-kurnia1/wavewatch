@@ -59,6 +59,7 @@ async def get_surf_data(beach_name: str, date: str):
         hourly_forecast = []
         best_surf_times = []  # Will be populated from AI analysis
         surf_data_for_ai = {}
+        break_specific_conditions = ""  # Will be populated from AI analysis
         
         # Check MongoDB cache first for Stormglass data
         stormglass_cached = False
@@ -161,6 +162,7 @@ async def get_surf_data(beach_name: str, date: str):
                         ai_analysis = cached_data.get('ai_analysis', '')
                     
                     one_sentence_summary = cached_data.get('one_sentence_summary', 'No cached summary')
+                    break_specific_conditions = cached_data.get('break_specific_conditions', '')
                     
                     # Always parse best times from AI analysis (ignore old cached format)
                     if ai_analysis:
@@ -174,7 +176,7 @@ async def get_surf_data(beach_name: str, date: str):
                     raise Exception(f"Cache data is not a dictionary: {type(cached_data)}")
             else:
                 # Generate new AI analysis
-                ai_analysis_text = summarizer.get_surf_conditions(beach_name, surf_data_for_ai, date)
+                ai_analysis_text, break_specific_conditions = summarizer.get_surf_conditions(beach_name, surf_data_for_ai, date)
                 one_sentence_summary = summarizer.get_one_sentence_summary(beach_name, surf_data_for_ai, date)
                 
                 ai_analysis = ai_analysis_text
@@ -190,6 +192,7 @@ async def get_surf_data(beach_name: str, date: str):
                     "current_conditions": current_conditions,
                     "hourly_forecast": hourly_forecast,
                     "best_surf_times": best_surf_times,
+                    "break_specific_conditions": break_specific_conditions,
                     "ai_analysis": {
                         "text": ai_analysis_text,
                         "overall_rating": "N/A",
@@ -209,7 +212,7 @@ async def get_surf_data(beach_name: str, date: str):
         except Exception as e:
             print(f"Warning: Could not check MongoDB cache: {e}")
             # Generate new AI analysis
-            ai_analysis_text = summarizer.get_surf_conditions(beach_name, surf_data_for_ai, date)
+            ai_analysis_text, break_specific_conditions = summarizer.get_surf_conditions(beach_name, surf_data_for_ai, date)
             one_sentence_summary = summarizer.get_one_sentence_summary(beach_name, surf_data_for_ai, date)
             
             ai_analysis = ai_analysis_text
@@ -227,6 +230,7 @@ async def get_surf_data(beach_name: str, date: str):
             "currentConditions": current_conditions if isinstance(current_conditions, dict) else {},
             "hourlyForecast": hourly_forecast,
             "bestSurfTimes": best_surf_times,
+            "breakSpecificConditions": break_specific_conditions,
             "aiAnalysis": ai_analysis,
             "oneSentenceSummary": one_sentence_summary
         }
