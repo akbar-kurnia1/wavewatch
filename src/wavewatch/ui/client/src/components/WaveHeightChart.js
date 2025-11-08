@@ -36,21 +36,40 @@ const CustomTooltip = styled.div`
   font-size: 0.9rem;
 `;
 
-const WaveHeightChart = ({ hourlyForecast }) => {
-  // Transform the hourly forecast data for the chart
+const WaveHeightChart = ({ hourlyForecast, tideData }) => {
+  // Transform the hourly forecast data for the chart (NO TIDE DATA - only high/lows from NOAA)
   const chartData = hourlyForecast?.map((hour, index) => {
-    // Handle both camelCase (mock data) and snake_case (API data) formats
-    const time = hour.time.includes(':') ? hour.time : new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Format time to HH:MM using built-in Date method
+    const time = new Date(hour.time).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    });
     return {
       time: time,
       waveHeight: parseFloat(hour.waveHeight || hour.wave_height) || 0,
       windSpeed: parseFloat(hour.windSpeed || hour.wind_speed) || 0,
       windDirection: parseFloat(hour.windDirection || hour.wind_direction) || 0,
-      tide: parseFloat(hour.tide) || 0,
       airTemperature: parseFloat(hour.airTemperature || hour.air_temperature) || 0,
       fullTime: hour.time
     };
   }) || [];
+
+  // Create tide chart data from high/low points only
+  // Handle both cases: with is_high_low_only flag or without (assume it's high/low if tide_conditions exists)
+  let tideChartData = [];
+  if (tideData && tideData.tide_conditions && Array.isArray(tideData.tide_conditions) && tideData.tide_conditions.length > 0) {
+    // If tide_conditions exists, use it (whether flagged as high/low only or not)
+    tideChartData = tideData.tide_conditions.map((tide) => ({
+      time: new Date(tide.time).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false 
+      }),
+      tide: parseFloat(tide.tide) || 0,
+      fullTime: tide.time
+    }));
+  }
 
   const WaveHeightTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -74,6 +93,19 @@ const WaveHeightChart = ({ hourlyForecast }) => {
           <p><strong>Time:</strong> {label}</p>
           <p><strong>Wind Speed:</strong> {data.windSpeed}mph</p>
           <p><strong>Wind Direction:</strong> {direction} ({data.windDirection}°)</p>
+        </CustomTooltip>
+      );
+    }
+    return null;
+  };
+
+  const TideTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <CustomTooltip>
+          <p><strong>Time:</strong> {label}</p>
+          <p><strong>Tide:</strong> {data.tide}ft</p>
         </CustomTooltip>
       );
     }
@@ -197,6 +229,63 @@ const WaveHeightChart = ({ hourlyForecast }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Tide chart - only high/low points with smooth curve */}
+      {tideChartData.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <h5 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>🌊 Tide (High/Low Points)</h5>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart
+              data={tideChartData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20,
+              }}
+            >
+              <defs>
+                <linearGradient id="tideGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#50C878" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#50C878" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+              <XAxis 
+                dataKey="time" 
+                stroke="rgba(255, 255, 255, 0.7)"
+                fontSize={12}
+                tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+                interval="preserveStartEnd"
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis 
+                stroke="rgba(255, 255, 255, 0.7)"
+                fontSize={12}
+                tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+                label={{ 
+                  value: 'Tide (ft)', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fill: 'rgba(255, 255, 255, 0.8)' }
+                }}
+              />
+              <Tooltip content={<TideTooltip />} />
+              <Area
+                type="natural"  // Natural spline creates smooth sinusoidal curve through points
+                dataKey="tide"
+                stroke="#50C878"
+                strokeWidth={2}
+                fill="url(#tideGradient)"
+                dot={{ fill: '#50C878', strokeWidth: 2, r: 5 }}  // Visible dots for high/low points
+                activeDot={{ r: 7, stroke: '#50C878', strokeWidth: 2, fill: 'white' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
       
     </ChartContainer>
   );

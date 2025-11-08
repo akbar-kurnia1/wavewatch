@@ -224,6 +224,20 @@ async def get_surf_data(beach_name: str, date: str):
         # Format response for React frontend
         # Variables already defined above for caching
         
+        # Get tide data from the data fetcher (high/low points only)
+        tide_data = {}
+        try:
+            # Fetch tide data directly using _get_noaa_tide_data
+            tide_data = data_fetcher._get_noaa_tide_data(beach_name, target_date=date)
+            print(f"DEBUG: Tide data fetched: {tide_data}")
+            if 'error' in tide_data:
+                print(f"Warning: Error fetching tide data: {tide_data.get('error')}")
+                tide_data = {}  # Set to empty dict on error
+        except Exception as e:
+            print(f"Warning: Could not fetch tide data: {e}")
+            import traceback
+            traceback.print_exc()
+        
         response = {
             "beachName": beach_name,
             "date": date,
@@ -232,7 +246,8 @@ async def get_surf_data(beach_name: str, date: str):
             "bestSurfTimes": best_surf_times,
             "breakSpecificConditions": break_specific_conditions,
             "aiAnalysis": ai_analysis,
-            "oneSentenceSummary": one_sentence_summary
+            "oneSentenceSummary": one_sentence_summary,
+            "tideData": tide_data
         }
         
         

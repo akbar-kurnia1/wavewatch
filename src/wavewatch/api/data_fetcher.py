@@ -36,9 +36,10 @@ class StormglassDataFetcher:
         self.cache_file = "surf_data_cache.json"
         self.cache_expiry = 86400  # 24 hours in seconds
         
-        # Mapping of beaches to nearest NOAA tide stations
+        # Mapping of beaches to NOAA tide stations (use actual station IDs)
         self.tide_stations = {
-            "pleasure point": "9413450",  # Monterey, CA (reference station for Santa Cruz)
+            "pleasure point": "9413745",  # Santa Cruz, CA
+            "santa cruz": "9413745",      # Santa Cruz, CA
             "malibu": "9410660",         # Los Angeles, CA
             "pipeline": "1612340",       # Honolulu, HI
             "trestles": "9410660",       # Los Angeles, CA (closest)
@@ -54,17 +55,8 @@ class StormglassDataFetcher:
             "linda mar": "9414290",     # San Francisco, CA (Presidio - closest to Pacifica)
         }
         
-        # Station-specific offsets for subordinate stations
-        self.station_offsets = {
-            "9413450": {  # Monterey reference station
-                "pleasure point": {
-                    "time_high": -6,    # minutes
-                    "time_low": -11,    # minutes  
-                    "height_high": 0.97, # multiplier
-                    "height_low": 0.99   # multiplier
-                }
-            }
-        }
+        # Cache for station metadata (to avoid repeated API calls)
+        self._station_metadata_cache = {}
         
         # Common surf beach coordinates (lat, lng)
         self.beach_coordinates = {
@@ -168,9 +160,69 @@ class StormglassDataFetcher:
         
         return None
     
+    def _get_station_metadata(self, station_id: str) -> Optional[Dict]:
+        """
+        Get station metadata from NOAA Metadata API.
+        Returns information about whether station is subordinate and its reference station.
+        
+        Args:
+            station_id: NOAA station ID
+            
+        Returns:
+            Dictionary with station metadata including:
+            - type: 'R' for reference (harmonic) or 'S' for subordinate
+            - reference_id: Reference station ID (if subordinate)
+            - tidepredoffsets: Time and height offsets (if subordinate)
+            None if metadata cannot be retrieved
+        """
+        # Check cache first
+        if station_id in self._station_metadata_cache:
+            return self._station_metadata_cache[station_id]
+        
+        try:
+            # Fetch station metadata from NOAA Metadata API
+            metadata_url = f"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station_id}.json"
+            response = requests.get(metadata_url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                # The API returns stations as a list, get the first one
+                if 'stations' in data and len(data['stations']) > 0:
+                    station_info = data['stations'][0]
+                    metadata = {
+                        'type': station_info.get('type', ''),  # 'R' or 'S'
+                        'reference_id': station_info.get('reference_id'),
+                        'tidepredoffsets_url': station_info.get('tidepredoffsets', {}).get('self') if isinstance(station_info.get('tidepredoffsets'), dict) else None
+                    }
+                    
+                    # If this is a subordinate station, fetch the actual offset values
+                    if metadata['type'] == 'S' and metadata['tidepredoffsets_url']:
+                        try:
+                            offsets_response = requests.get(metadata['tidepredoffsets_url'], timeout=10)
+                            if offsets_response.status_code == 200:
+                                offsets_data = offsets_response.json()
+                                metadata['tidepredoffsets'] = {
+                                    'time_high': offsets_data.get('timeOffsetHighTide', 0),
+                                    'time_low': offsets_data.get('timeOffsetLowTide', 0),
+                                    'height_high': offsets_data.get('heightOffsetHighTide', 1.0),
+                                    'height_low': offsets_data.get('heightOffsetLowTide', 1.0)
+                                }
+                        except Exception as e:
+                            print(f"Warning: Could not fetch tide offsets for {station_id}: {e}")
+                    
+                    # Cache the result
+                    self._station_metadata_cache[station_id] = metadata
+                    return metadata
+            return None
+        except Exception as e:
+            print(f"Warning: Could not fetch station metadata for {station_id}: {e}")
+            return None
+    
     def _get_noaa_tide_data(self, beach_name: str, target_date: str = None) -> Dict:
         """
         Get tide data from NOAA CO-OPS for the nearest tide station.
+        Handles both harmonic stations (direct hourly data) and subordinate stations
+        (high/low predictions from reference station with offsets applied).
         
         Args:
             beach_name: Name of the surf beach
@@ -198,66 +250,144 @@ class StormglassDataFetcher:
             if not isinstance(date_obj, datetime):
                 date_obj = datetime.strptime(str(date_obj), '%Y-%m-%d')
             
-            # Create station object
-            station = Station(station_id)
-            
-            # Get hourly tide data for the day
-            # NOAA CO-OPS library expects YYYYMMDD format
             date_str = date_obj.strftime('%Y%m%d')
-            # Use water_level product with MLLW datum (works for most stations)
-            tide_data = station.get_data(
-                begin_date=date_str,
-                end_date=date_str,
-                product='water_level',
-                datum='MLLW',
-                units='metric',
-                time_zone='gmt'
-            )
-            if tide_data.empty:
-                return {'error': 'No tide data available for this date'}
             
-            # Convert to our format and apply offsets if needed
-            tide_conditions = []
-            for index, row in tide_data.iterrows():
-                # Convert timestamp to ISO format
-                iso_time = index.strftime('%Y-%m-%dT%H:%M:%S+00:00')
-                
-                # Use 'v' column for water_level data, fallback to 'hourly_height' for other products
-                tide_value = row['v'] if 'v' in row else (row['hourly_height'] if 'hourly_height' in row else 0)
-                tide_ft = round(float(tide_value) * 3.28084, 2)  # Convert meters to feet
-                
-                # Apply Santa Cruz offsets if using Monterey reference station
-                if station_id == "9413450" and beach_name in self.station_offsets.get(station_id, {}):
-                    offsets = self.station_offsets[station_id][beach_name]
-                    # Determine if this is likely a high or low tide based on height
-                    # High tides are typically > 3ft, low tides < 2ft
-                    if tide_ft > 3.0:  # Likely high tide
-                        tide_ft = tide_ft * offsets['height_high']
-                        # Apply time offset (subtract minutes)
-                        time_obj = datetime.strptime(iso_time, '%Y-%m-%dT%H:%M:%S+00:00')
-                        time_obj = time_obj - timedelta(minutes=abs(offsets['time_high']))
-                        iso_time = time_obj.strftime('%Y-%m-%dT%H:%M:%S+00:00')
-                    elif tide_ft < 2.0:  # Likely low tide
-                        tide_ft = tide_ft * offsets['height_low']
-                        # Apply time offset (subtract minutes)
-                        time_obj = datetime.strptime(iso_time, '%Y-%m-%dT%H:%M:%S+00:00')
-                        time_obj = time_obj - timedelta(minutes=abs(offsets['time_low']))
-                        iso_time = time_obj.strftime('%Y-%m-%dT%H:%M:%S+00:00')
-                
-                tide_conditions.append({
-                    'time': iso_time,
-                    'tide': round(tide_ft, 2)
-                })
+            # Get station metadata to check if it's subordinate
+            station_metadata = self._get_station_metadata(station_id)
             
-            
-            return {
-                'tide_conditions': tide_conditions,
-                'station_id': station_id,
-                'station_name': f'Station {station_id}'
-            }
+            # Check if this is a subordinate station
+            if station_metadata and station_metadata.get('type') == 'S' and station_metadata.get('reference_id'):
+                # This is a subordinate station - get predictions from reference station
+                reference_station_id = station_metadata['reference_id']
+                offsets = station_metadata.get('tidepredoffsets', {})
+                
+                # Extract offset values from the metadata
+                offsets_dict = offsets if isinstance(offsets, dict) else {}
+                time_high = offsets_dict.get('time_high', 0)
+                time_low = offsets_dict.get('time_low', 0)
+                height_high = offsets_dict.get('height_high', 1.0)
+                height_low = offsets_dict.get('height_low', 1.0)
+                
+                # Get high/low tide predictions from reference station using NOAA API directly
+                # The noaa_coops library may not support predictions product well, so use direct API
+                predictions_url = (
+                    f"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?"
+                    f"product=predictions&application=NOS.COOPS.TAC.WL&"
+                    f"station={reference_station_id}&begin_date={date_str}&end_date={date_str}&"
+                    f"datum=MLLW&interval=hilo&units=metric&time_zone=gmt&format=json"
+                )
+                
+                try:
+                    predictions_response = requests.get(predictions_url, timeout=10)
+                    if predictions_response.status_code == 200:
+                        predictions_data = predictions_response.json()
+                        predictions_list = predictions_data.get('predictions', [])
+                        
+                        if not predictions_list:
+                            return {'error': f'No tide predictions available from reference station {reference_station_id}'}
+                        
+                        # Apply offsets to high/low tides
+                        high_low_tides = []
+                        for pred in predictions_list:
+                            tide_type = pred.get('type', '').upper()  # 'H' for high, 'L' for low
+                            tide_time_str = pred.get('t', '')
+                            tide_value_m = float(pred.get('v', 0))
+                            tide_value_ft = tide_value_m * 3.28084  # Convert to feet
+                            
+                            # Parse time (format: YYYY-MM-DD HH:MM)
+                            try:
+                                tide_time = datetime.strptime(tide_time_str, '%Y-%m-%d %H:%M')
+                            except:
+                                # Try alternative format
+                                tide_time = datetime.strptime(tide_time_str, '%Y-%m-%d %H:%M:%S')
+                            
+                            # Apply height offset
+                            if tide_type == 'H':  # High tide
+                                tide_value_ft = tide_value_ft * height_high
+                                time_offset = time_high
+                            else:  # Low tide
+                                tide_value_ft = tide_value_ft * height_low
+                                time_offset = time_low
+                            
+                            # Apply time offset
+                            adjusted_time = tide_time + timedelta(minutes=time_offset)
+                            
+                            high_low_tides.append({
+                                'time': adjusted_time,
+                                'tide': tide_value_ft,
+                                'reference_station': reference_station_id
+                            })
+                        
+                        # Return only high/low tide points (no interpolation)
+                        tide_conditions = []
+                        for tide in high_low_tides:
+                            tide_conditions.append({
+                                'time': tide['time'].strftime('%Y-%m-%dT%H:%M:%S+00:00'),
+                                'tide': round(tide['tide'], 2)
+                            })
+                        
+                        return {
+                            'tide_conditions': tide_conditions,
+                            'station_id': station_id,
+                            'reference_station_id': reference_station_id,
+                            'station_name': f'Station {station_id} (subordinate, ref: {reference_station_id})',
+                            'is_high_low_only': True  # Flag to indicate these are high/low points only
+                        }
+                    else:
+                        return {'error': f'Failed to fetch predictions from reference station {reference_station_id}: HTTP {predictions_response.status_code}'}
+                except Exception as e:
+                    return {'error': f'Error fetching predictions from reference station: {str(e)}'}
+            else:
+                # This is a harmonic station - get high/low predictions (not hourly water level)
+                # Use predictions API to get high/low points for consistency
+                predictions_url = (
+                    f"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?"
+                    f"product=predictions&application=NOS.COOPS.TAC.WL&"
+                    f"station={station_id}&begin_date={date_str}&end_date={date_str}&"
+                    f"datum=MLLW&interval=hilo&units=metric&time_zone=gmt&format=json"
+                )
+                
+                try:
+                    predictions_response = requests.get(predictions_url, timeout=10)
+                    if predictions_response.status_code == 200:
+                        predictions_data = predictions_response.json()
+                        predictions_list = predictions_data.get('predictions', [])
+                        
+                        if not predictions_list:
+                            return {'error': f'No tide predictions available for station {station_id}'}
+                        
+                        # Convert to our format
+                        tide_conditions = []
+                        for pred in predictions_list:
+                            tide_time_str = pred.get('t', '')
+                            tide_value_m = float(pred.get('v', 0))
+                            tide_value_ft = tide_value_m * 3.28084  # Convert to feet
+                            
+                            # Parse time
+                            try:
+                                tide_time = datetime.strptime(tide_time_str, '%Y-%m-%d %H:%M')
+                            except:
+                                tide_time = datetime.strptime(tide_time_str, '%Y-%m-%d %H:%M:%S')
+                            
+                            tide_conditions.append({
+                                'time': tide_time.strftime('%Y-%m-%dT%H:%M:%S+00:00'),
+                                'tide': round(tide_value_ft, 2)
+                            })
+                        
+                        return {
+                            'tide_conditions': tide_conditions,
+                            'station_id': station_id,
+                            'station_name': f'Station {station_id}',
+                            'is_high_low_only': True  # Flag to indicate these are high/low points only
+                        }
+                    else:
+                        return {'error': f'Failed to fetch predictions for station {station_id}: HTTP {predictions_response.status_code}'}
+                except Exception as e:
+                    return {'error': f'Error fetching predictions: {str(e)}'}
             
         except Exception as e:
-            return {'error': f'Error fetching NOAA tide data: {str(e)}'}
+            import traceback
+            return {'error': f'Error fetching NOAA tide data: {str(e)}\n{traceback.format_exc()}'}
     
     def fetch_surf_data(self, beach_name: str, lat: Optional[float] = None, lng: Optional[float] = None, target_date: str = None) -> Dict:
         """
@@ -320,8 +450,7 @@ class StormglassDataFetcher:
                     'humidity',        # Humidity
                     'visibility',      # Visibility
                     'cloudCover',     # Cloud cover
-                    'precipitation',   # Precipitation
-                    'seaLevel'        # Sea level (tide equivalent)
+                    'precipitation'   # Precipitation
                 ]),
                 'source': 'noaa',  # Use NOAA as primary source
                 'start': int((datetime.strptime(target_date, '%Y-%m-%d') if isinstance(target_date, str) else target_date).replace(hour=0, minute=0, second=0).timestamp()) if target_date else int(datetime.now().replace(hour=0, minute=0, second=0).timestamp()),  # Start of target day
@@ -416,23 +545,6 @@ class StormglassDataFetcher:
                 visibility_km = hour_data.get('visibility', {}).get('noaa', 'N/A')
                 visibility_mi = round(float(visibility_km) * 0.621371, 1) if visibility_km != 'N/A' else 'N/A'
                 
-                # Get tide data from NOAA CO-OPS if available
-                tide_ft = 'N/A'
-                if 'tide_data' in result and 'tide_conditions' in result['tide_data']:
-                    # Find matching tide data for this hour
-                    hour_time = hour_data.get('time', '')
-                    for tide_entry in result['tide_data']['tide_conditions']:
-                        if tide_entry['time'] == hour_time:
-                            tide_ft = tide_entry['tide']
-                            break
-                
-                # Fallback to Stormglass data if NOAA data not available
-                if tide_ft == 'N/A':
-                    sea_level_m = hour_data.get('seaLevel', {}).get('noaa', 'N/A')
-                    
-                    if sea_level_m != 'N/A':
-                        tide_ft = round(float(sea_level_m) * 3.28084, 1)
-                
                 hourly_conditions.append({
                     'time': hour_data.get('time', 'N/A'),
                     'wave_height': wave_height_ft,
@@ -446,8 +558,7 @@ class StormglassDataFetcher:
                     'humidity': hour_data.get('humidity', {}).get('noaa', 'N/A'),
                     'visibility': visibility_mi,
                     'cloud_cover': hour_data.get('cloudCover', {}).get('noaa', 'N/A'),
-                    'precipitation': hour_data.get('precipitation', {}).get('noaa', 'N/A'),
-                    'tide': tide_ft
+                    'precipitation': hour_data.get('precipitation', {}).get('noaa', 'N/A')
                 })
             
             return {
@@ -506,7 +617,6 @@ class StormglassDataFetcher:
                             'wind_speed': hour['wind_speed'],
                             'wind_direction': hour['wind_direction'],
                             'water_temperature': hour['water_temperature'],
-                            'tide': hour['tide'],
                             'score': total_score
                         })
                 except (ValueError, TypeError):
@@ -567,23 +677,6 @@ class StormglassDataFetcher:
             visibility_km = current_hour.get('visibility', {}).get('noaa', 'N/A')
             visibility_mi = round(float(visibility_km) * 0.621371, 1) if visibility_km != 'N/A' else 'N/A'
             
-            # Get tide data from NOAA CO-OPS if available
-            tide_ft = 'N/A'
-            if 'tide_data' in result and 'tide_conditions' in result['tide_data']:
-                # Find current hour tide data
-                current_time = current_hour.get('time', '')
-                for tide_entry in result['tide_data']['tide_conditions']:
-                    if tide_entry['time'] == current_time:
-                        tide_ft = tide_entry['tide']
-                        break
-            
-            # Fallback to Stormglass data if NOAA data not available
-            if tide_ft == 'N/A':
-                sea_level_m = current_hour.get('seaLevel', {}).get('noaa', 'N/A')
-                
-                if sea_level_m != 'N/A':
-                    tide_ft = round(float(sea_level_m) * 3.28084, 1)
-            
             return {
                 'beach_name': result['beach_name'],
                 'coordinates': result['coordinates'],
@@ -601,8 +694,7 @@ class StormglassDataFetcher:
                     'humidity': current_hour.get('humidity', {}).get('noaa', 'N/A'),
                     'visibility': visibility_mi,
                     'cloud_cover': current_hour.get('cloudCover', {}).get('noaa', 'N/A'),
-                    'precipitation': current_hour.get('precipitation', {}).get('noaa', 'N/A'),
-                    'tide': tide_ft
+                    'precipitation': current_hour.get('precipitation', {}).get('noaa', 'N/A')
                 }
             }
         except (KeyError, IndexError, TypeError) as e:

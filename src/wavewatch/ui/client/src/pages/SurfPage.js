@@ -151,12 +151,14 @@ const SurfPage = () => {
                         <div>Wind Direction: <strong>{surfData.currentConditions?.wind_direction || 'N/A'}°</strong></div>
                         <div>Water Temp: <strong>{surfData.currentConditions?.water_temperature || 'N/A'}°F</strong></div>
                         <div>Air Temp: <strong>{surfData.currentConditions?.air_temperature || 'N/A'}°F</strong></div>
-                        <div>Tide: <strong>{surfData.currentConditions?.tide || 'N/A'}ft</strong></div>
                       </div>
                     </div>
 
                     {/* Wave Height Chart */}
-                    <WaveHeightChart hourlyForecast={surfData.hourlyForecast} />
+                    <WaveHeightChart 
+                      hourlyForecast={surfData.hourlyForecast} 
+                      tideData={surfData.tideData}
+                    />
 
                     {/* Best Surf Times */}
                     <div style={{ marginBottom: '2rem' }}>
