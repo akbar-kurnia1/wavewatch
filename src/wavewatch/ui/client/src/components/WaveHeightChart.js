@@ -37,7 +37,7 @@ const CustomTooltip = styled.div`
 `;
 
 const WaveHeightChart = ({ hourlyForecast, tideData }) => {
-  // Transform the hourly forecast data for the chart (NO TIDE DATA - only high/lows from NOAA)
+  // Transform the hourly forecast data for the chart
   const chartData = hourlyForecast?.map((hour, index) => {
     // Format time to HH:MM using built-in Date method
     const time = new Date(hour.time).toLocaleTimeString([], { 
@@ -55,11 +55,9 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
     };
   }) || [];
 
-  // Create tide chart data from high/low points only
-  // Handle both cases: with is_high_low_only flag or without (assume it's high/low if tide_conditions exists)
+  // Transform tide data for chart (high/low points only)
   let tideChartData = [];
   if (tideData && tideData.tide_conditions && Array.isArray(tideData.tide_conditions) && tideData.tide_conditions.length > 0) {
-    // If tide_conditions exists, use it (whether flagged as high/low only or not)
     tideChartData = tideData.tide_conditions.map((tide) => ({
       time: new Date(tide.time).toLocaleTimeString([], { 
         hour: '2-digit', 

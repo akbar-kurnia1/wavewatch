@@ -88,7 +88,6 @@ const RegisterPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle registration logic here
-    console.log('Registration attempt:', formData);
   };
 
   return (

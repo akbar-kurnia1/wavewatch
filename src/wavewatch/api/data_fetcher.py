@@ -10,7 +10,6 @@ import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 from dotenv import load_dotenv
-from noaa_coops import Station
 
 # Load environment variables
 load_dotenv()
@@ -75,8 +74,11 @@ class StormglassDataFetcher:
             "palos verdes": (33.7444, -118.3878),
             "rancho palos verdes": (33.7444, -118.3878),
             "san onofre": (33.3703, -117.5681),
+            "san onofre state beach": (33.3703, -117.5681),
             "doheny": (33.4625, -117.7142),
+            "doheny state beach": (33.4625, -117.7142),
             "salt creek": (33.4625, -117.7142),
+            "san clemente": (33.3703, -117.5681),
             "laguna beach": (33.5427, -117.7854),
             "newport beach": (33.6189, -117.9298),
             "seal beach": (33.7414, -118.1048),
@@ -90,22 +92,6 @@ class StormglassDataFetcher:
             "newport pier": (33.6189, -117.9298),
             "blackies": (33.6189, -117.9298),
             "the wedge": (33.6189, -117.9298),
-            "salt creek": (33.4625, -117.7142),
-            "doheny state beach": (33.4625, -117.7142),
-            "san clemente": (33.3703, -117.5681),
-            "trestles": (33.3703, -117.5681),
-            "san onofre state beach": (33.3703, -117.5681),
-            "trails": (33.3703, -117.5681),
-            "old man's": (33.3703, -117.5681),
-            "church": (33.3703, -117.5681),
-            "middles": (33.3703, -117.5681),
-            "cottons": (33.3703, -117.5681),
-            "upper trestles": (33.3703, -117.5681),
-            "lower trestles": (33.3703, -117.5681),
-            "uppers": (33.3703, -117.5681),
-            "lowers": (33.3703, -117.5681),
-            "trestles": (33.3703, -117.5681),
-            "san onofre": (33.3703, -117.5681),
             "trails": (33.3703, -117.5681),
             "old man's": (33.3703, -117.5681),
             "church": (33.3703, -117.5681),
@@ -330,8 +316,7 @@ class StormglassDataFetcher:
                             'tide_conditions': tide_conditions,
                             'station_id': station_id,
                             'reference_station_id': reference_station_id,
-                            'station_name': f'Station {station_id} (subordinate, ref: {reference_station_id})',
-                            'is_high_low_only': True  # Flag to indicate these are high/low points only
+                            'station_name': f'Station {station_id} (subordinate, ref: {reference_station_id})'
                         }
                     else:
                         return {'error': f'Failed to fetch predictions from reference station {reference_station_id}: HTTP {predictions_response.status_code}'}
@@ -377,8 +362,7 @@ class StormglassDataFetcher:
                         return {
                             'tide_conditions': tide_conditions,
                             'station_id': station_id,
-                            'station_name': f'Station {station_id}',
-                            'is_high_low_only': True  # Flag to indicate these are high/low points only
+                            'station_name': f'Station {station_id}'
                         }
                     else:
                         return {'error': f'Failed to fetch predictions for station {station_id}: HTTP {predictions_response.status_code}'}
