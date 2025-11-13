@@ -1,39 +1,99 @@
 export const theme = {
   colors: {
-    primary: '#667eea',
-    secondary: '#764ba2',
-    white: '#ffffff',
+    // Professional surf forecast palette
+    primary: '#0066CC',        // Ocean blue
+    secondary: '#003D7A',     // Deep blue
+    white: '#FFFFFF',
+    lightGray: '#F5F7FA',
+    gray: '#E1E8ED',
+    darkGray: '#657786',
+    black: '#14171A',
+    
     text: {
-      primary: 'rgba(255, 255, 255, 0.9)',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      muted: 'rgba(255, 255, 255, 0.5)',
+      primary: '#14171A',
+      secondary: '#657786',
+      muted: '#AAB8C2',
+      white: '#FFFFFF',
     },
+    
     background: {
-      glass: 'rgba(255, 255, 255, 0.1)',
-      glassHover: 'rgba(255, 255, 255, 0.2)',
-      glassActive: 'rgba(255, 255, 255, 0.3)',
+      primary: '#FFFFFF',
+      secondary: '#F5F7FA',
+      tertiary: '#E1E8ED',
+      dark: '#003D7A',
     },
+    
+    surf: {
+      excellent: '#00C853',   // Green for great conditions
+      good: '#4CAF50',        // Light green
+      fair: '#FFC107',        // Yellow/amber
+      poor: '#FF5722',        // Orange/red
+    },
+    
     accent: {
-      blue: '#4A90E2',
-      red: '#FF6B6B',
-      green: '#50C878',
+      blue: '#0066CC',
+      lightBlue: '#4A90E2',
+      teal: '#00ACC1',
+      orange: '#FF6B35',
+      green: '#00C853',
+    },
+    
+    border: {
+      light: '#E1E8ED',
+      medium: '#AAB8C2',
+      dark: '#657786',
     }
   },
+  
   spacing: {
     xs: '0.5rem',
     sm: '1rem',
     md: '1.5rem',
     lg: '2rem',
-    xl: '4rem',
+    xl: '3rem',
+    xxl: '4rem',
   },
+  
   borderRadius: {
-    sm: '8px',
-    md: '15px',
+    sm: '6px',
+    md: '10px',
+    lg: '16px',
+    xl: '24px',
+    full: '9999px',
   },
+  
+  shadows: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px rgba(0, 0, 0, 0.07)',
+    lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px rgba(0, 0, 0, 0.1)',
+  },
+  
   breakpoints: {
     mobile: '768px',
     tablet: '1024px',
     desktop: '1200px',
+    wide: '1440px',
+  },
+  
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    fontSize: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    }
   }
 };
 

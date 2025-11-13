@@ -18,24 +18,29 @@ const Form = styled.form`
 `;
 
 const Title = styled.h2`
-  color: ${theme.colors.white};
+  color: ${theme.colors.text.primary};
   text-align: center;
   margin-bottom: ${theme.spacing.lg};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  font-family: ${theme.typography.fontFamily};
 `;
 
 const LinkText = styled.p`
   color: ${theme.colors.text.secondary};
   text-align: center;
-  margin-top: ${theme.spacing.sm};
+  margin-top: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize.base};
 `;
 
 const StyledLink = styled(Link)`
-  color: ${theme.colors.white};
+  color: ${theme.colors.primary};
   text-decoration: none;
-  font-weight: bold;
+  font-weight: ${theme.typography.fontWeight.semibold};
   
   &:hover {
     text-decoration: underline;
+    color: ${theme.colors.secondary};
   }
 `;
 
@@ -60,7 +65,7 @@ const LoginPage = () => {
   return (
     <LoginContainer>
       <Card>
-        <Title>🔐 Login</Title>
+        <Title>Login</Title>
         <Form onSubmit={handleSubmit}>
           <Input
             type="email"

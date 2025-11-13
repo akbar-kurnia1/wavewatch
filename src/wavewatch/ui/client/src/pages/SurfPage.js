@@ -6,25 +6,161 @@ import WaveHeightChart from '../components/features/surf/WaveHeightChart';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Card from '../components/common/Card';
+import MetricCard from '../components/common/MetricCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import { theme } from '../styles/theme';
 
 const SurfContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: ${theme.spacing.lg};
 `;
 
+const SearchCard = styled(Card)`
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const SearchTitle = styled.h2`
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.text.primary};
+  margin-bottom: ${theme.spacing.md};
+  font-family: ${theme.typography.fontFamily};
+`;
+
 const SearchForm = styled.form`
   display: flex;
-  gap: ${theme.spacing.sm};
-  align-items: center;
+  gap: ${theme.spacing.md};
+  align-items: flex-end;
   flex-wrap: wrap;
 `;
 
-const ResultsSection = styled(Card)`
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.xs};
+  flex: 1;
+  min-width: 200px;
+`;
+
+const FormLabel = styled.label`
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.medium};
+  color: ${theme.colors.text.secondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const BeachHeader = styled.div`
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const BeachTitle = styled.h1`
+  font-size: ${theme.typography.fontSize['4xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.text.primary};
+  margin-bottom: ${theme.spacing.xs};
+  font-family: ${theme.typography.fontFamily};
+`;
+
+const BeachDate = styled.p`
+  font-size: ${theme.typography.fontSize.lg};
+  color: ${theme.colors.text.secondary};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const SummaryCard = styled(Card)`
+  background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
   color: ${theme.colors.white};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const SummaryTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  margin-bottom: ${theme.spacing.sm};
+  color: ${theme.colors.white};
+`;
+
+const SummaryText = styled.p`
+  font-size: ${theme.typography.fontSize.lg};
+  line-height: 1.6;
+  color: ${theme.colors.white};
+  opacity: 0.95;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.text.primary};
+  margin-bottom: ${theme.spacing.md};
+  font-family: ${theme.typography.fontFamily};
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const BestTimesGrid = styled.div`
+  display: grid;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const BestTimeCard = styled(Card)`
+  border-left: 4px solid ${theme.colors.primary};
+`;
+
+const BestTimeHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${theme.spacing.sm};
+  flex-wrap: wrap;
+  gap: ${theme.spacing.sm};
+`;
+
+const BestTimeTitle = styled.div`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.primary};
+`;
+
+const BestTimeRating = styled.span`
+  background: ${theme.colors.primary};
+  color: ${theme.colors.white};
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
+  border-radius: ${theme.borderRadius.full};
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.bold};
+`;
+
+const BestTimeMetrics = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.sm};
+  font-size: ${theme.typography.fontSize.base};
+  color: ${theme.colors.text.secondary};
+`;
+
+const BestTimeReason = styled.div`
+  margin-top: ${theme.spacing.sm};
+  padding-top: ${theme.spacing.sm};
+  border-top: 1px solid ${theme.colors.border.light};
+  color: ${theme.colors.text.primary};
+  line-height: 1.6;
+`;
+
+const ReasonLabel = styled.strong`
+  display: block;
+  color: ${theme.colors.primary};
+  margin-bottom: ${theme.spacing.xs};
+  font-weight: ${theme.typography.fontWeight.semibold};
 `;
 
 const SurfPage = () => {
@@ -42,9 +178,9 @@ const SurfPage = () => {
     setError('');
     
     try {
-          const data = await surfApi.getSurfData(beachName, selectedDate);
-          setSurfData(data);
-          setLoading(false);
+      const data = await surfApi.getSurfData(beachName, selectedDate);
+      setSurfData(data);
+      setLoading(false);
     } catch (err) {
       setError('Failed to fetch surf data');
       setLoading(false);
@@ -53,154 +189,198 @@ const SurfPage = () => {
 
   return (
     <SurfContainer>
-      <Card marginBottom={theme.spacing.lg}>
-        <h2 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm }}>🌊 Check Surf Conditions</h2>
+      <SearchCard>
+        <SearchTitle>Surf Forecast</SearchTitle>
         <SearchForm onSubmit={handleSubmit}>
-          <Input
-            type="text"
-            placeholder="Enter beach name (e.g., pleasure point)"
-            value={beachName}
-            onChange={(e) => setBeachName(e.target.value)}
-          />
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Loading...' : 'Get Surf Data'}
+          <FormGroup>
+            <FormLabel>Beach Name</FormLabel>
+            <Input
+              type="text"
+              placeholder="e.g., Pleasure Point, Malibu"
+              value={beachName}
+              onChange={(e) => setBeachName(e.target.value)}
+            />
+          </FormGroup>
+          <FormGroup>
+            <FormLabel>Date</FormLabel>
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </FormGroup>
+          <Button type="submit" disabled={loading} size="large">
+            {loading ? 'Loading...' : 'Get Forecast'}
           </Button>
         </SearchForm>
-      </Card>
+      </SearchCard>
 
-      <ResultsSection>
-        {loading && <LoadingSpinner message="Fetching surf conditions..." />}
-        {error && <ErrorMessage message={error} />}
-                {surfData && (
-                  <div>
-                    <h3>🏖️ {surfData.beachName}</h3>
-                    <p>📅 {surfData.date}</p>
-                    <p style={{ color: theme.colors.accent.green, fontWeight: 'bold', marginBottom: theme.spacing.sm }}>
-                      ✅ Real Stormglass API Data
-                    </p>
-            
-            {/* One Sentence Summary */}
-            <Card marginBottom={theme.spacing.lg} padding={theme.spacing.sm}>
-              <h4>🌊 Summary</h4>
-              <p>{surfData.oneSentenceSummary}</p>
-            </Card>
+      {loading && <LoadingSpinner message="Fetching surf conditions..." />}
+      {error && <ErrorMessage message={error} />}
+      
+      {surfData && (
+        <>
+          <BeachHeader>
+            <BeachTitle>{surfData.beachName}</BeachTitle>
+            <BeachDate>{new Date(surfData.date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</BeachDate>
+          </BeachHeader>
 
-                    {/* Current Conditions */}
-                    <div style={{ marginBottom: theme.spacing.lg }}>
-                      <h4>📊 Current Conditions</h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
-                        <div>Wave Height: <strong>{surfData.currentConditions?.wave_height || 'N/A'}ft</strong></div>
-                        <div>Wave Period: <strong>{surfData.currentConditions?.wave_period || 'N/A'}s</strong></div>
-                        <div>Wind Speed: <strong>{surfData.currentConditions?.wind_speed || 'N/A'}mph</strong></div>
-                        <div>Wind Direction: <strong>{surfData.currentConditions?.wind_direction || 'N/A'}°</strong></div>
-                        <div>Water Temp: <strong>{surfData.currentConditions?.water_temperature || 'N/A'}°F</strong></div>
-                        <div>Air Temp: <strong>{surfData.currentConditions?.air_temperature || 'N/A'}°F</strong></div>
-                      </div>
-                    </div>
+          {/* Summary */}
+          {surfData.oneSentenceSummary && (
+            <SummaryCard>
+              <SummaryTitle>Forecast Summary</SummaryTitle>
+              <SummaryText>{surfData.oneSentenceSummary}</SummaryText>
+            </SummaryCard>
+          )}
 
-                    {/* Wave Height Chart */}
-                    <WaveHeightChart 
-                      hourlyForecast={surfData.hourlyForecast} 
-                      tideData={surfData.tideData}
-                    />
+          {/* Current Conditions */}
+          <SectionTitle>Current Conditions</SectionTitle>
+          <MetricsGrid>
+            <MetricCard 
+              label="Wave Height" 
+              value={surfData.currentConditions?.wave_height || 'N/A'} 
+              unit="ft"
+              size="large"
+            />
+            <MetricCard 
+              label="Wave Period" 
+              value={surfData.currentConditions?.wave_period || 'N/A'} 
+              unit="s"
+            />
+            <MetricCard 
+              label="Wind Speed" 
+              value={surfData.currentConditions?.wind_speed || 'N/A'} 
+              unit="mph"
+            />
+            <MetricCard 
+              label="Wind Direction" 
+              value={surfData.currentConditions?.wind_direction || 'N/A'} 
+              unit="°"
+            />
+            <MetricCard 
+              label="Water Temp" 
+              value={surfData.currentConditions?.water_temperature || 'N/A'} 
+              unit="°F"
+            />
+            <MetricCard 
+              label="Air Temp" 
+              value={surfData.currentConditions?.air_temperature || 'N/A'} 
+              unit="°F"
+            />
+          </MetricsGrid>
 
-                    {/* Best Surf Times */}
-                    <div style={{ marginBottom: theme.spacing.lg }}>
-                      <h4>🏄‍♂️ Best Surf Times</h4>
-                      {Array.isArray(surfData.bestSurfTimes) && surfData.bestSurfTimes.length > 0 ? (
-                        surfData.bestSurfTimes.map((time, index) => (
-                          <Card key={index} marginBottom={theme.spacing.sm} padding={theme.spacing.sm}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.xs, flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: '1.1rem', color: theme.colors.accent.blue }}>{time.time || 'N/A'}</strong>
-                              {time.rating && (
-                                <span style={{ background: `rgba(74, 144, 226, 0.3)`, padding: `${theme.spacing.xs} ${theme.spacing.md}`, borderRadius: '20px', fontWeight: 'bold' }}>
-                                  Rating: {time.rating}/100
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: theme.spacing.sm, marginBottom: theme.spacing.sm, fontSize: '0.95rem' }}>
-                              {time.wave_height_range && (
-                                <div>🌊 Wave: <strong>{time.wave_height_range}</strong></div>
-                              )}
-                              {time.period && (
-                                <div>⏱️ Period: <strong>{time.period}s</strong></div>
-                              )}
-                              {time.wind_speed_range && (
-                                <div>💨 Wind: <strong>{time.wind_speed_range}</strong></div>
-                              )}
-                            </div>
-                            {time.reason && (
-                              <div style={{ marginTop: theme.spacing.sm, paddingTop: theme.spacing.sm, borderTop: `1px solid ${theme.colors.background.glassHover}`, lineHeight: '1.6', color: theme.colors.text.primary }}>
-                                <strong style={{ color: theme.colors.accent.blue, display: 'block', marginBottom: theme.spacing.xs }}>Why this time:</strong>
-                                <div style={{ whiteSpace: 'pre-line' }}>{time.reason}</div>
-                              </div>
-                            )}
-                          </Card>
-                        ))
-                      ) : (
-                        <p style={{ opacity: 0.8, fontStyle: 'italic' }}>
-                          {typeof surfData.bestSurfTimes === 'string' ? surfData.bestSurfTimes : 'No surf time data available'}
-                        </p>
+          {/* Wave Height Chart */}
+          <WaveHeightChart 
+            hourlyForecast={surfData.hourlyForecast} 
+            tideData={surfData.tideData}
+          />
+
+          {/* Best Surf Times */}
+          {Array.isArray(surfData.bestSurfTimes) && surfData.bestSurfTimes.length > 0 && (
+            <>
+              <SectionTitle>Best Surf Times</SectionTitle>
+              <BestTimesGrid>
+                {surfData.bestSurfTimes.map((time, index) => (
+                  <BestTimeCard key={index}>
+                    <BestTimeHeader>
+                      <BestTimeTitle>
+                        {new Date(time.time).toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true 
+                        })}
+                      </BestTimeTitle>
+                      {time.rating && (
+                        <BestTimeRating>Rating: {time.rating}/100</BestTimeRating>
                       )}
-                    </div>
-
-                    {/* Break-Specific Ideal Conditions */}
-                    {surfData.breakSpecificConditions && surfData.breakSpecificConditions.trim() !== "" && 
-                     surfData.breakSpecificConditions !== "No break-specific information available. Using general surf forecasting principles." && (
-                      <Card marginBottom={theme.spacing.lg} padding={theme.spacing.sm} style={{ background: `rgba(74, 144, 226, 0.1)`, border: `1px solid rgba(74, 144, 226, 0.3)` }}>
-                        <h4 style={{ color: theme.colors.accent.blue, marginBottom: theme.spacing.sm }}>📍 Ideal Conditions for {surfData.beachName}</h4>
-                        <div style={{ lineHeight: '1.6', color: theme.colors.text.primary, fontSize: '0.95rem' }}>
-                          <ReactMarkdown
-                            components={{
-                              h1: ({children}) => <h1 style={{color: theme.colors.accent.blue, fontSize: '1.1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h1>,
-                              h2: ({children}) => <h2 style={{color: theme.colors.accent.blue, fontSize: '1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h2>,
-                              h3: ({children}) => <h3 style={{color: theme.colors.accent.blue, fontSize: '0.95rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h3>,
-                              p: ({children}) => <p style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</p>,
-                              strong: ({children}) => <strong style={{color: theme.colors.accent.blue, fontWeight: 'bold'}}>{children}</strong>,
-                              ul: ({children}) => <ul style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
-                              li: ({children}) => <li style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</li>,
-                              ol: ({children}) => <ol style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
-                            }}
-                          >
-                            {surfData.breakSpecificConditions}
-                          </ReactMarkdown>
-                        </div>
-                      </Card>
+                    </BestTimeHeader>
+                    <BestTimeMetrics>
+                      {time.wave_height_range && (
+                        <div><strong>Wave:</strong> {time.wave_height_range}</div>
+                      )}
+                      {time.period && (
+                        <div><strong>Period:</strong> {time.period}s</div>
+                      )}
+                      {time.wind_speed_range && (
+                        <div><strong>Wind:</strong> {time.wind_speed_range}</div>
+                      )}
+                    </BestTimeMetrics>
+                    {time.reason && (
+                      <BestTimeReason>
+                        <ReasonLabel>Why this time:</ReasonLabel>
+                        <div style={{ whiteSpace: 'pre-line' }}>{time.reason}</div>
+                      </BestTimeReason>
                     )}
+                  </BestTimeCard>
+                ))}
+              </BestTimesGrid>
+            </>
+          )}
 
-            {/* AI Analysis */}
-            <div>
-              <h4>🤖 AI Analysis</h4>
-              <Card padding={theme.spacing.sm} marginBottom={theme.spacing.lg} style={{ lineHeight: '1.6' }}>
+          {/* Break-Specific Ideal Conditions */}
+          {surfData.breakSpecificConditions && 
+           surfData.breakSpecificConditions.trim() !== "" && 
+           surfData.breakSpecificConditions !== "No break-specific information available. Using general surf forecasting principles." && (
+            <Card marginBottom={theme.spacing.xl} style={{ borderLeft: `4px solid ${theme.colors.primary}` }}>
+              <SectionTitle style={{ marginBottom: theme.spacing.md }}>
+                Ideal Conditions for {surfData.beachName}
+              </SectionTitle>
+              <div style={{ lineHeight: '1.8', color: theme.colors.text.primary }}>
                 <ReactMarkdown
                   components={{
-                    h1: ({children}) => <h1 style={{color: theme.colors.accent.blue, fontSize: '1.5rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h1>,
-                    h2: ({children}) => <h2 style={{color: theme.colors.accent.blue, fontSize: '1.3rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h2>,
-                    h3: ({children}) => <h3 style={{color: theme.colors.accent.blue, fontSize: '1.1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h3>,
-                    p: ({children}) => <p style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</p>,
-                    strong: ({children}) => <strong style={{color: theme.colors.accent.blue, fontWeight: 'bold'}}>{children}</strong>,
-                    ul: ({children}) => <ul style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
+                    h1: ({children}) => <h1 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize.xl, margin: `${theme.spacing.md} 0 ${theme.spacing.sm} 0`, fontWeight: theme.typography.fontWeight.bold}}>{children}</h1>,
+                    h2: ({children}) => <h2 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize.lg, margin: `${theme.spacing.md} 0 ${theme.spacing.sm} 0`, fontWeight: theme.typography.fontWeight.bold}}>{children}</h2>,
+                    h3: ({children}) => <h3 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize.base, margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: theme.typography.fontWeight.semibold}}>{children}</h3>,
+                    p: ({children}) => <p style={{margin: `${theme.spacing.sm} 0`, color: theme.colors.text.primary}}>{children}</p>,
+                    strong: ({children}) => <strong style={{color: theme.colors.primary, fontWeight: theme.typography.fontWeight.bold}}>{children}</strong>,
+                    ul: ({children}) => <ul style={{margin: `${theme.spacing.sm} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
                     li: ({children}) => <li style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</li>,
-                    ol: ({children}) => <ol style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
+                    ol: ({children}) => <ol style={{margin: `${theme.spacing.sm} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
+                  }}
+                >
+                  {surfData.breakSpecificConditions}
+                </ReactMarkdown>
+              </div>
+            </Card>
+          )}
+
+          {/* AI Analysis */}
+          {surfData.aiAnalysis && (
+            <Card marginBottom={theme.spacing.xl}>
+              <SectionTitle>AI Analysis</SectionTitle>
+              <div style={{ lineHeight: '1.8', color: theme.colors.text.primary }}>
+                <ReactMarkdown
+                  components={{
+                    h1: ({children}) => <h1 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize['2xl'], margin: `${theme.spacing.md} 0 ${theme.spacing.sm} 0`, fontWeight: theme.typography.fontWeight.bold}}>{children}</h1>,
+                    h2: ({children}) => <h2 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize.xl, margin: `${theme.spacing.md} 0 ${theme.spacing.sm} 0`, fontWeight: theme.typography.fontWeight.bold}}>{children}</h2>,
+                    h3: ({children}) => <h3 style={{color: theme.colors.primary, fontSize: theme.typography.fontSize.lg, margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: theme.typography.fontWeight.semibold}}>{children}</h3>,
+                    p: ({children}) => <p style={{margin: `${theme.spacing.sm} 0`, color: theme.colors.text.primary}}>{children}</p>,
+                    strong: ({children}) => <strong style={{color: theme.colors.primary, fontWeight: theme.typography.fontWeight.bold}}>{children}</strong>,
+                    ul: ({children}) => <ul style={{margin: `${theme.spacing.sm} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
+                    li: ({children}) => <li style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</li>,
+                    ol: ({children}) => <ol style={{margin: `${theme.spacing.sm} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
                   }}
                 >
                   {typeof surfData.aiAnalysis === 'string' ? surfData.aiAnalysis : JSON.stringify(surfData.aiAnalysis)}
                 </ReactMarkdown>
-              </Card>
-            </div>
-          </div>
-        )}
-        {!loading && !error && !surfData && (
-          <p style={{ textAlign: 'center', color: theme.colors.text.secondary }}>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+      
+      {!loading && !error && !surfData && (
+        <Card>
+          <p style={{ textAlign: 'center', color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.lg }}>
             Enter a beach name and date to get surf conditions
           </p>
-        )}
-      </ResultsSection>
+        </Card>
+      )}
     </SurfContainer>
   );
 };

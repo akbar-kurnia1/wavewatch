@@ -6,19 +6,33 @@ const SpinnerContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: ${theme.spacing.lg};
+  padding: ${theme.spacing.xl};
+`;
+
+const SpinnerIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid ${theme.colors.border.light};
+  border-top-color: ${theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 `;
 
 const SpinnerText = styled.p`
   color: ${theme.colors.text.secondary};
-  font-size: 1.1rem;
-  margin-left: ${theme.spacing.sm};
+  font-size: ${theme.typography.fontSize.lg};
+  margin-left: ${theme.spacing.md};
+  font-weight: ${theme.typography.fontWeight.medium};
 `;
 
 const LoadingSpinner = ({ message = 'Loading...' }) => {
   return (
     <SpinnerContainer>
-      <span style={{ fontSize: '1.5rem' }}>🌊</span>
+      <SpinnerIcon />
       <SpinnerText>{message}</SpinnerText>
     </SpinnerContainer>
   );

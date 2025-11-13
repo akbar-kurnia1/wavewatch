@@ -14,27 +14,30 @@ import {
 import { theme } from '../../../styles/theme';
 
 const ChartContainer = styled.div`
-  background: ${theme.colors.background.glass};
-  padding: ${theme.spacing.md};
-  border-radius: ${theme.borderRadius.md};
-  margin: ${theme.spacing.sm} 0;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: ${theme.colors.background.primary};
+  padding: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.lg};
+  margin: ${theme.spacing.xl} 0;
+  border: 1px solid ${theme.colors.border.light};
+  box-shadow: ${theme.shadows.md};
 `;
 
 const ChartTitle = styled.h4`
-  color: ${theme.colors.white};
-  margin-bottom: ${theme.spacing.sm};
-  font-size: 1.2rem;
+  color: ${theme.colors.text.primary};
+  margin-bottom: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  font-family: ${theme.typography.fontFamily};
 `;
 
 const CustomTooltip = styled.div`
-  background: rgba(0, 0, 0, 0.8);
-  padding: 0.8rem;
-  border-radius: ${theme.borderRadius.sm};
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: ${theme.colors.white};
-  font-size: 0.9rem;
+  background: ${theme.colors.background.primary};
+  padding: ${theme.spacing.sm};
+  border-radius: ${theme.borderRadius.md};
+  border: 1px solid ${theme.colors.border.medium};
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.fontSize.sm};
+  box-shadow: ${theme.shadows.lg};
 `;
 
 const WaveHeightChart = ({ hourlyForecast, tideData }) => {
@@ -127,10 +130,10 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
   if (!hourlyForecast || hourlyForecast.length === 0) {
     return (
       <ChartContainer>
-        <ChartTitle>📈 Wave Height Throughout the Day</ChartTitle>
-        <p style={{ color: theme.colors.text.secondary, textAlign: 'center', padding: theme.spacing.lg }}>
-          No hourly forecast data available
-        </p>
+      <ChartTitle>Wave Height Throughout the Day</ChartTitle>
+      <p style={{ color: theme.colors.text.secondary, textAlign: 'center', padding: theme.spacing.lg, fontSize: theme.typography.fontSize.base }}>
+        No hourly forecast data available
+      </p>
       </ChartContainer>
     );
   }
@@ -154,22 +157,22 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
               <stop offset="95%" stopColor={theme.colors.accent.blue} stopOpacity={0.1}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.border.light} />
           <XAxis 
             dataKey="time" 
-            stroke="rgba(255, 255, 255, 0.7)"
+            stroke={theme.colors.text.secondary}
             fontSize={12}
-            tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+            tick={{ fill: theme.colors.text.secondary }}
           />
           <YAxis 
-            stroke="rgba(255, 255, 255, 0.7)"
+            stroke={theme.colors.text.secondary}
             fontSize={12}
-            tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+            tick={{ fill: theme.colors.text.secondary }}
             label={{ 
               value: 'Wave Height (ft)', 
               angle: -90, 
               position: 'insideLeft',
-              style: { textAnchor: 'middle', fill: 'rgba(255, 255, 255, 0.8)' }
+              style: { textAnchor: 'middle', fill: theme.colors.text.secondary }
             }}
           />
           <Tooltip content={<WaveHeightTooltip />} />
@@ -186,8 +189,8 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
       </ResponsiveContainer>
       
       {/* Additional chart for wind speed */}
-      <div style={{ marginTop: theme.spacing.lg }}>
-        <h5 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm, fontSize: '1rem' }}>💨 Wind Speed</h5>
+      <div style={{ marginTop: theme.spacing.xl }}>
+        <h5 style={{ color: theme.colors.text.primary, marginBottom: theme.spacing.md, fontSize: theme.typography.fontSize.lg, fontWeight: theme.typography.fontWeight.bold }}>Wind Speed</h5>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart
             data={chartData}
@@ -198,22 +201,22 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
               bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+            <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.border.light} />
             <XAxis 
               dataKey="time" 
-              stroke="rgba(255, 255, 255, 0.7)"
+              stroke={theme.colors.text.secondary}
               fontSize={12}
-              tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+              tick={{ fill: theme.colors.text.secondary }}
             />
             <YAxis 
-              stroke="rgba(255, 255, 255, 0.7)"
+              stroke={theme.colors.text.secondary}
               fontSize={12}
-              tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+              tick={{ fill: theme.colors.text.secondary }}
               label={{ 
                 value: 'Wind Speed (mph)', 
                 angle: -90, 
                 position: 'insideLeft',
-                style: { textAnchor: 'middle', fill: 'rgba(255, 255, 255, 0.8)' }
+                style: { textAnchor: 'middle', fill: theme.colors.text.secondary }
             }}
           />
           <Tooltip content={<WindSpeedTooltip />} />
@@ -231,8 +234,8 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
 
       {/* Tide chart - only high/low points with smooth curve */}
       {tideChartData.length > 0 && (
-        <div style={{ marginTop: theme.spacing.lg }}>
-          <h5 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm, fontSize: '1rem' }}>🌊 Tide (High/Low Points)</h5>
+        <div style={{ marginTop: theme.spacing.xl }}>
+          <h5 style={{ color: theme.colors.text.primary, marginBottom: theme.spacing.md, fontSize: theme.typography.fontSize.lg, fontWeight: theme.typography.fontWeight.bold }}>Tide (High/Low Points)</h5>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart
               data={tideChartData}
@@ -249,26 +252,26 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
                   <stop offset="95%" stopColor={theme.colors.accent.green} stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.border.light} />
               <XAxis 
                 dataKey="time" 
-                stroke="rgba(255, 255, 255, 0.7)"
+                stroke={theme.colors.text.secondary}
                 fontSize={12}
-                tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+                tick={{ fill: theme.colors.text.secondary }}
                 interval="preserveStartEnd"
                 angle={-45}
                 textAnchor="end"
                 height={60}
               />
               <YAxis 
-                stroke="rgba(255, 255, 255, 0.7)"
+                stroke={theme.colors.text.secondary}
                 fontSize={12}
-                tick={{ fill: 'rgba(255, 255, 255, 0.8)' }}
+                tick={{ fill: theme.colors.text.secondary }}
                 label={{ 
                   value: 'Tide (ft)', 
                   angle: -90, 
                   position: 'insideLeft',
-                  style: { textAnchor: 'middle', fill: 'rgba(255, 255, 255, 0.8)' }
+                  style: { textAnchor: 'middle', fill: theme.colors.text.secondary }
                 }}
               />
               <Tooltip content={<TideTooltip />} />

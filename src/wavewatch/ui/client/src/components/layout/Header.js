@@ -4,44 +4,60 @@ import styled from 'styled-components';
 import { theme } from '../../styles/theme';
 
 const HeaderContainer = styled.header`
-  background: ${theme.colors.background.glass};
-  backdrop-filter: blur(10px);
-  padding: ${theme.spacing.sm} ${theme.spacing.lg};
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  background: ${theme.colors.background.primary};
+  border-bottom: 1px solid ${theme.colors.border.light};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  box-shadow: ${theme.shadows.sm};
+  position: sticky;
+  top: 0;
+  z-index: 100;
 `;
 
 const Nav = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 `;
 
 const Logo = styled(Link)`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: ${theme.colors.white};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.primary};
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: ${theme.spacing.xs};
+  font-family: ${theme.typography.fontFamily};
+  
+  &:hover {
+    color: ${theme.colors.secondary};
+  }
+`;
+
+const LogoIcon = styled.span`
+  font-size: ${theme.typography.fontSize['3xl']};
 `;
 
 const NavLinks = styled.div`
   display: flex;
-  gap: ${theme.spacing.lg};
+  gap: ${theme.spacing.md};
+  align-items: center;
 `;
 
 const NavLink = styled(Link)`
-  color: ${theme.colors.white};
+  color: ${theme.colors.text.primary};
   text-decoration: none;
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+  border-radius: ${theme.borderRadius.md};
+  transition: all 0.2s ease;
+  font-weight: ${theme.typography.fontWeight.medium};
+  font-size: ${theme.typography.fontSize.base};
   
   &:hover {
-    background-color: ${theme.colors.background.glassHover};
+    background-color: ${theme.colors.background.secondary};
+    color: ${theme.colors.primary};
   }
 `;
 
@@ -50,13 +66,14 @@ const Header = () => {
     <HeaderContainer>
       <Nav>
         <Logo to="/">
-          🌊 WaveWatch
+          <LogoIcon>🌊</LogoIcon>
+          WaveWatch
         </Logo>
         <NavLinks>
           <NavLink to="/">Home</NavLink>
-          <NavLink to="/surf">Surf</NavLink>
+          <NavLink to="/surf">Forecast</NavLink>
           <NavLink to="/login">Login</NavLink>
-          <NavLink to="/register">Register</NavLink>
+          <NavLink to="/register">Sign Up</NavLink>
         </NavLinks>
       </Nav>
     </HeaderContainer>
@@ -64,4 +81,5 @@ const Header = () => {
 };
 
 export default Header;
+
 

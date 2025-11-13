@@ -1,87 +1,103 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import Button from '../components/common/Button';
+import { theme } from '../styles/theme';
 
 const HomeContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: ${theme.spacing.xl} ${theme.spacing.lg};
 `;
 
 const Hero = styled.div`
-  margin: 4rem 0;
-  color: white;
+  text-align: center;
+  margin: ${theme.spacing.xxl} 0;
+  color: ${theme.colors.text.primary};
 `;
 
 const Title = styled.h1`
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: ${theme.typography.fontSize['4xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  margin-bottom: ${theme.spacing.md};
+  font-family: ${theme.typography.fontFamily};
+  color: ${theme.colors.text.primary};
+  line-height: 1.2;
+  
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    font-size: ${theme.typography.fontSize['3xl']};
+  }
 `;
 
 const Subtitle = styled.p`
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  opacity: 0.9;
+  font-size: ${theme.typography.fontSize.xl};
+  margin-bottom: ${theme.spacing.xl};
+  color: ${theme.colors.text.secondary};
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
 `;
 
-const CTAButton = styled(Link)`
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
+const CTAButton = styled(Button)`
+  font-size: ${theme.typography.fontSize.lg};
+  padding: ${theme.spacing.md} ${theme.spacing.xl};
 `;
 
 const Features = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin: 4rem 0;
+  gap: ${theme.spacing.xl};
+  margin: ${theme.spacing.xxl} 0;
 `;
 
 const FeatureCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: ${theme.colors.background.primary};
+  padding: ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.lg};
+  border: 1px solid ${theme.colors.border.light};
+  box-shadow: ${theme.shadows.md};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: ${theme.shadows.lg};
+    transform: translateY(-2px);
+  }
 `;
 
 const FeatureIcon = styled.div`
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: ${theme.spacing.md};
+  text-align: center;
 `;
 
 const FeatureTitle = styled.h3`
-  color: white;
-  margin-bottom: 1rem;
+  color: ${theme.colors.text.primary};
+  margin-bottom: ${theme.spacing.sm};
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  font-family: ${theme.typography.fontFamily};
 `;
 
 const FeatureText = styled.p`
-  color: rgba(255, 255, 255, 0.8);
+  color: ${theme.colors.text.secondary};
   line-height: 1.6;
+  font-size: ${theme.typography.fontSize.base};
 `;
 
 const HomePage = () => {
   return (
     <HomeContainer>
       <Hero>
-        <Title>🌊 WaveWatch</Title>
-        <Subtitle>Your ultimate surf forecasting companion</Subtitle>
-        <CTAButton to="/surf">Check Surf Conditions</CTAButton>
+        <Title>WaveWatch</Title>
+        <Subtitle>
+          Professional surf forecasting powered by real-time data and AI analysis. 
+          Get accurate wave conditions, wind forecasts, and personalized recommendations 
+          for your next surf session.
+        </Subtitle>
+        <CTAButton as={Link} to="/surf" variant="primary" size="large">
+          Check Surf Forecast
+        </CTAButton>
       </Hero>
       
       <Features>
@@ -104,11 +120,11 @@ const HomePage = () => {
         </FeatureCard>
         
         <FeatureCard>
-          <FeatureIcon>🗺️</FeatureIcon>
-          <FeatureTitle>Interactive Maps</FeatureTitle>
+          <FeatureIcon>📈</FeatureIcon>
+          <FeatureTitle>Detailed Forecasts</FeatureTitle>
           <FeatureText>
-            Visualize surf locations with directional overlays for swell 
-            and wind patterns.
+            Visualize surf conditions throughout the day with interactive charts 
+            and hourly forecasts for optimal planning.
           </FeatureText>
         </FeatureCard>
       </Features>
