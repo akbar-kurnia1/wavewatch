@@ -1,67 +1,36 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
+import Card from '../components/common/Card';
+import { theme } from '../styles/theme';
 
 const LoginContainer = styled.div`
   max-width: 400px;
-  margin: 4rem auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: ${theme.spacing.xl} auto;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-`;
-
-const Input = styled.input`
-  padding: 0.8rem;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  font-size: 1rem;
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const Button = styled.button`
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
+  gap: ${theme.spacing.sm};
 `;
 
 const Title = styled.h2`
-  color: white;
+  color: ${theme.colors.white};
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: ${theme.spacing.lg};
 `;
 
 const LinkText = styled.p`
-  color: rgba(255, 255, 255, 0.8);
+  color: ${theme.colors.text.secondary};
   text-align: center;
-  margin-top: 1rem;
+  margin-top: ${theme.spacing.sm};
 `;
 
 const StyledLink = styled(Link)`
-  color: white;
+  color: ${theme.colors.white};
   text-decoration: none;
   font-weight: bold;
   
@@ -90,29 +59,31 @@ const LoginPage = () => {
 
   return (
     <LoginContainer>
-      <Title>🔐 Login</Title>
-      <Form onSubmit={handleSubmit}>
-        <Input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <Button type="submit">Login</Button>
-      </Form>
-      <LinkText>
-        Don't have an account? <StyledLink to="/register">Register here</StyledLink>
-      </LinkText>
+      <Card>
+        <Title>🔐 Login</Title>
+        <Form onSubmit={handleSubmit}>
+          <Input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <Button type="submit">Login</Button>
+        </Form>
+        <LinkText>
+          Don't have an account? <StyledLink to="/register">Register here</StyledLink>
+        </LinkText>
+      </Card>
     </LoginContainer>
   );
 };

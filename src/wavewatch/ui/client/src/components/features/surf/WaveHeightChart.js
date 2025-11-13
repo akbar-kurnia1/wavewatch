@@ -11,28 +11,29 @@ import {
   Area,
   AreaChart
 } from 'recharts';
+import { theme } from '../../../styles/theme';
 
 const ChartContainer = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  border-radius: 15px;
-  margin: 1rem 0;
+  background: ${theme.colors.background.glass};
+  padding: ${theme.spacing.md};
+  border-radius: ${theme.borderRadius.md};
+  margin: ${theme.spacing.sm} 0;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const ChartTitle = styled.h4`
-  color: white;
-  margin-bottom: 1rem;
+  color: ${theme.colors.white};
+  margin-bottom: ${theme.spacing.sm};
   font-size: 1.2rem;
 `;
 
 const CustomTooltip = styled.div`
   background: rgba(0, 0, 0, 0.8);
   padding: 0.8rem;
-  border-radius: 8px;
+  border-radius: ${theme.borderRadius.sm};
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  color: ${theme.colors.white};
   font-size: 0.9rem;
 `;
 
@@ -127,7 +128,7 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
     return (
       <ChartContainer>
         <ChartTitle>📈 Wave Height Throughout the Day</ChartTitle>
-        <p style={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center', padding: '2rem' }}>
+        <p style={{ color: theme.colors.text.secondary, textAlign: 'center', padding: theme.spacing.lg }}>
           No hourly forecast data available
         </p>
       </ChartContainer>
@@ -149,8 +150,8 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
         >
           <defs>
             <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4A90E2" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#4A90E2" stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={theme.colors.accent.blue} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={theme.colors.accent.blue} stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
@@ -175,18 +176,18 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
           <Area
             type="monotone"
             dataKey="waveHeight"
-            stroke="#4A90E2"
+            stroke={theme.colors.accent.blue}
             strokeWidth={3}
             fill="url(#waveGradient)"
-            dot={{ fill: '#4A90E2', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: '#4A90E2', strokeWidth: 2, fill: 'white' }}
+            dot={{ fill: theme.colors.accent.blue, strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, stroke: theme.colors.accent.blue, strokeWidth: 2, fill: 'white' }}
           />
         </AreaChart>
       </ResponsiveContainer>
       
       {/* Additional chart for wind speed */}
-      <div style={{ marginTop: '2rem' }}>
-        <h5 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>💨 Wind Speed</h5>
+      <div style={{ marginTop: theme.spacing.lg }}>
+        <h5 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm, fontSize: '1rem' }}>💨 Wind Speed</h5>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart
             data={chartData}
@@ -219,10 +220,10 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
           <Line
               type="monotone"
               dataKey="windSpeed"
-              stroke="#FF6B6B"
+              stroke={theme.colors.accent.red}
               strokeWidth={2}
-              dot={{ fill: '#FF6B6B', strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, stroke: '#FF6B6B', strokeWidth: 2, fill: 'white' }}
+              dot={{ fill: theme.colors.accent.red, strokeWidth: 2, r: 3 }}
+              activeDot={{ r: 5, stroke: theme.colors.accent.red, strokeWidth: 2, fill: 'white' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -230,8 +231,8 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
 
       {/* Tide chart - only high/low points with smooth curve */}
       {tideChartData.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
-          <h5 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>🌊 Tide (High/Low Points)</h5>
+        <div style={{ marginTop: theme.spacing.lg }}>
+          <h5 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm, fontSize: '1rem' }}>🌊 Tide (High/Low Points)</h5>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart
               data={tideChartData}
@@ -244,8 +245,8 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
             >
               <defs>
                 <linearGradient id="tideGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#50C878" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#50C878" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor={theme.colors.accent.green} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={theme.colors.accent.green} stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
@@ -274,11 +275,11 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
               <Area
                 type="natural"  // Natural spline creates smooth sinusoidal curve through points
                 dataKey="tide"
-                stroke="#50C878"
+                stroke={theme.colors.accent.green}
                 strokeWidth={2}
                 fill="url(#tideGradient)"
-                dot={{ fill: '#50C878', strokeWidth: 2, r: 5 }}  // Visible dots for high/low points
-                activeDot={{ r: 7, stroke: '#50C878', strokeWidth: 2, fill: 'white' }}
+                dot={{ fill: theme.colors.accent.green, strokeWidth: 2, r: 5 }}  // Visible dots for high/low points
+                activeDot={{ r: 7, stroke: theme.colors.accent.green, strokeWidth: 2, fill: 'white' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -290,3 +291,4 @@ const WaveHeightChart = ({ hourlyForecast, tideData }) => {
 };
 
 export default WaveHeightChart;
+

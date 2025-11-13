@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
-import Header from './components/Header';
+import Header from './components/layout/Header';
 import HomePage from './pages/HomePage';
 import SurfPage from './pages/SurfPage';
 import LoginPage from './pages/LoginPage';

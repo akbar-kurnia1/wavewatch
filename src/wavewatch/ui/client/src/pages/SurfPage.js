@@ -2,80 +2,29 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
 import surfApi from '../services/surfApi';
-import WaveHeightChart from '../components/WaveHeightChart';
+import WaveHeightChart from '../components/features/surf/WaveHeightChart';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
+import Card from '../components/common/Card';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+import { theme } from '../styles/theme';
 
 const SurfContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-`;
-
-const SearchSection = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 15px;
-  margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: ${theme.spacing.lg};
 `;
 
 const SearchForm = styled.form`
   display: flex;
-  gap: 1rem;
+  gap: ${theme.spacing.sm};
   align-items: center;
   flex-wrap: wrap;
 `;
 
-const Input = styled.input`
-  padding: 0.8rem;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  font-size: 1rem;
-  min-width: 200px;
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const Button = styled.button`
-  padding: 0.8rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-  }
-`;
-
-const ResultsSection = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-`;
-
-const LoadingText = styled.p`
-  text-align: center;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.1rem;
-`;
-
-const ErrorText = styled.p`
-  color: #ff6b6b;
-  text-align: center;
-  font-size: 1.1rem;
+const ResultsSection = styled(Card)`
+  color: ${theme.colors.white};
 `;
 
 const SurfPage = () => {
@@ -104,8 +53,8 @@ const SurfPage = () => {
 
   return (
     <SurfContainer>
-      <SearchSection>
-        <h2 style={{ color: 'white', marginBottom: '1rem' }}>🌊 Check Surf Conditions</h2>
+      <Card marginBottom={theme.spacing.lg}>
+        <h2 style={{ color: theme.colors.white, marginBottom: theme.spacing.sm }}>🌊 Check Surf Conditions</h2>
         <SearchForm onSubmit={handleSubmit}>
           <Input
             type="text"
@@ -122,29 +71,29 @@ const SurfPage = () => {
             {loading ? 'Loading...' : 'Get Surf Data'}
           </Button>
         </SearchForm>
-      </SearchSection>
+      </Card>
 
       <ResultsSection>
-        {loading && <LoadingText>🌊 Fetching surf conditions...</LoadingText>}
-        {error && <ErrorText>❌ {error}</ErrorText>}
+        {loading && <LoadingSpinner message="Fetching surf conditions..." />}
+        {error && <ErrorMessage message={error} />}
                 {surfData && (
                   <div>
                     <h3>🏖️ {surfData.beachName}</h3>
                     <p>📅 {surfData.date}</p>
-                    <p style={{ color: '#4CAF50', fontWeight: 'bold', marginBottom: '1rem' }}>
+                    <p style={{ color: theme.colors.accent.green, fontWeight: 'bold', marginBottom: theme.spacing.sm }}>
                       ✅ Real Stormglass API Data
                     </p>
             
             {/* One Sentence Summary */}
-            <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+            <Card marginBottom={theme.spacing.lg} padding={theme.spacing.sm}>
               <h4>🌊 Summary</h4>
               <p>{surfData.oneSentenceSummary}</p>
-            </div>
+            </Card>
 
                     {/* Current Conditions */}
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ marginBottom: theme.spacing.lg }}>
                       <h4>📊 Current Conditions</h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
                         <div>Wave Height: <strong>{surfData.currentConditions?.wave_height || 'N/A'}ft</strong></div>
                         <div>Wave Period: <strong>{surfData.currentConditions?.wave_period || 'N/A'}s</strong></div>
                         <div>Wind Speed: <strong>{surfData.currentConditions?.wind_speed || 'N/A'}mph</strong></div>
@@ -161,20 +110,20 @@ const SurfPage = () => {
                     />
 
                     {/* Best Surf Times */}
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ marginBottom: theme.spacing.lg }}>
                       <h4>🏄‍♂️ Best Surf Times</h4>
                       {Array.isArray(surfData.bestSurfTimes) && surfData.bestSurfTimes.length > 0 ? (
                         surfData.bestSurfTimes.map((time, index) => (
-                          <div key={index} style={{ margin: '1rem 0', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: '1.1rem', color: '#4A90E2' }}>{time.time || 'N/A'}</strong>
+                          <Card key={index} marginBottom={theme.spacing.sm} padding={theme.spacing.sm}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.xs, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: '1.1rem', color: theme.colors.accent.blue }}>{time.time || 'N/A'}</strong>
                               {time.rating && (
-                                <span style={{ background: 'rgba(74, 144, 226, 0.3)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontWeight: 'bold' }}>
+                                <span style={{ background: `rgba(74, 144, 226, 0.3)`, padding: `${theme.spacing.xs} ${theme.spacing.md}`, borderRadius: '20px', fontWeight: 'bold' }}>
                                   Rating: {time.rating}/100
                                 </span>
                               )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.95rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: theme.spacing.sm, marginBottom: theme.spacing.sm, fontSize: '0.95rem' }}>
                               {time.wave_height_range && (
                                 <div>🌊 Wave: <strong>{time.wave_height_range}</strong></div>
                               )}
@@ -186,12 +135,12 @@ const SurfPage = () => {
                               )}
                             </div>
                             {time.reason && (
-                              <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', lineHeight: '1.6', color: '#E8F4FD' }}>
-                                <strong style={{ color: '#7BB3F0', display: 'block', marginBottom: '0.5rem' }}>Why this time:</strong>
+                              <div style={{ marginTop: theme.spacing.sm, paddingTop: theme.spacing.sm, borderTop: `1px solid ${theme.colors.background.glassHover}`, lineHeight: '1.6', color: theme.colors.text.primary }}>
+                                <strong style={{ color: theme.colors.accent.blue, display: 'block', marginBottom: theme.spacing.xs }}>Why this time:</strong>
                                 <div style={{ whiteSpace: 'pre-line' }}>{time.reason}</div>
                               </div>
                             )}
-                          </div>
+                          </Card>
                         ))
                       ) : (
                         <p style={{ opacity: 0.8, fontStyle: 'italic' }}>
@@ -203,57 +152,51 @@ const SurfPage = () => {
                     {/* Break-Specific Ideal Conditions */}
                     {surfData.breakSpecificConditions && surfData.breakSpecificConditions.trim() !== "" && 
                      surfData.breakSpecificConditions !== "No break-specific information available. Using general surf forecasting principles." && (
-                      <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(74, 144, 226, 0.1)', borderRadius: '8px', border: '1px solid rgba(74, 144, 226, 0.3)' }}>
-                        <h4 style={{ color: '#4A90E2', marginBottom: '0.75rem' }}>📍 Ideal Conditions for {surfData.beachName}</h4>
-                        <div style={{ lineHeight: '1.6', color: '#E8F4FD', fontSize: '0.95rem' }}>
+                      <Card marginBottom={theme.spacing.lg} padding={theme.spacing.sm} style={{ background: `rgba(74, 144, 226, 0.1)`, border: `1px solid rgba(74, 144, 226, 0.3)` }}>
+                        <h4 style={{ color: theme.colors.accent.blue, marginBottom: theme.spacing.sm }}>📍 Ideal Conditions for {surfData.beachName}</h4>
+                        <div style={{ lineHeight: '1.6', color: theme.colors.text.primary, fontSize: '0.95rem' }}>
                           <ReactMarkdown
                             components={{
-                              h1: ({children}) => <h1 style={{color: '#7BB3F0', fontSize: '1.1rem', margin: '0.8rem 0 0.4rem 0', fontWeight: 'bold'}}>{children}</h1>,
-                              h2: ({children}) => <h2 style={{color: '#7BB3F0', fontSize: '1rem', margin: '0.7rem 0 0.3rem 0', fontWeight: 'bold'}}>{children}</h2>,
-                              h3: ({children}) => <h3 style={{color: '#7BB3F0', fontSize: '0.95rem', margin: '0.6rem 0 0.3rem 0', fontWeight: 'bold'}}>{children}</h3>,
-                              p: ({children}) => <p style={{margin: '0.4rem 0', color: '#E8F4FD'}}>{children}</p>,
-                              strong: ({children}) => <strong style={{color: '#7BB3F0', fontWeight: 'bold'}}>{children}</strong>,
-                              ul: ({children}) => <ul style={{margin: '0.4rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ul>,
-                              li: ({children}) => <li style={{margin: '0.25rem 0', color: '#E8F4FD'}}>{children}</li>,
-                              ol: ({children}) => <ol style={{margin: '0.4rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ol>
+                              h1: ({children}) => <h1 style={{color: theme.colors.accent.blue, fontSize: '1.1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h1>,
+                              h2: ({children}) => <h2 style={{color: theme.colors.accent.blue, fontSize: '1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h2>,
+                              h3: ({children}) => <h3 style={{color: theme.colors.accent.blue, fontSize: '0.95rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`, fontWeight: 'bold'}}>{children}</h3>,
+                              p: ({children}) => <p style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</p>,
+                              strong: ({children}) => <strong style={{color: theme.colors.accent.blue, fontWeight: 'bold'}}>{children}</strong>,
+                              ul: ({children}) => <ul style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
+                              li: ({children}) => <li style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</li>,
+                              ol: ({children}) => <ol style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
                             }}
                           >
                             {surfData.breakSpecificConditions}
                           </ReactMarkdown>
                         </div>
-                      </div>
+                      </Card>
                     )}
 
             {/* AI Analysis */}
             <div>
               <h4>🤖 AI Analysis</h4>
-              <div style={{ 
-                marginTop: '1rem', 
-                padding: '1rem', 
-                background: 'rgba(255,255,255,0.1)', 
-                borderRadius: '8px',
-                lineHeight: '1.6'
-              }}>
+              <Card padding={theme.spacing.sm} marginBottom={theme.spacing.lg} style={{ lineHeight: '1.6' }}>
                 <ReactMarkdown
                   components={{
-                    h1: ({children}) => <h1 style={{color: '#4A90E2', fontSize: '1.5rem', margin: '1rem 0 0.5rem 0'}}>{children}</h1>,
-                    h2: ({children}) => <h2 style={{color: '#4A90E2', fontSize: '1.3rem', margin: '1rem 0 0.5rem 0'}}>{children}</h2>,
-                    h3: ({children}) => <h3 style={{color: '#4A90E2', fontSize: '1.1rem', margin: '0.8rem 0 0.4rem 0'}}>{children}</h3>,
-                    p: ({children}) => <p style={{margin: '0.5rem 0', color: '#E8F4FD'}}>{children}</p>,
-                    strong: ({children}) => <strong style={{color: '#7BB3F0', fontWeight: 'bold'}}>{children}</strong>,
-                    ul: ({children}) => <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ul>,
-                    li: ({children}) => <li style={{margin: '0.3rem 0', color: '#E8F4FD'}}>{children}</li>,
-                    ol: ({children}) => <ol style={{margin: '0.5rem 0', paddingLeft: '1.5rem', color: '#E8F4FD'}}>{children}</ol>
+                    h1: ({children}) => <h1 style={{color: theme.colors.accent.blue, fontSize: '1.5rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h1>,
+                    h2: ({children}) => <h2 style={{color: theme.colors.accent.blue, fontSize: '1.3rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h2>,
+                    h3: ({children}) => <h3 style={{color: theme.colors.accent.blue, fontSize: '1.1rem', margin: `${theme.spacing.sm} 0 ${theme.spacing.xs} 0`}}>{children}</h3>,
+                    p: ({children}) => <p style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</p>,
+                    strong: ({children}) => <strong style={{color: theme.colors.accent.blue, fontWeight: 'bold'}}>{children}</strong>,
+                    ul: ({children}) => <ul style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ul>,
+                    li: ({children}) => <li style={{margin: `${theme.spacing.xs} 0`, color: theme.colors.text.primary}}>{children}</li>,
+                    ol: ({children}) => <ol style={{margin: `${theme.spacing.xs} 0`, paddingLeft: '1.5rem', color: theme.colors.text.primary}}>{children}</ol>
                   }}
                 >
                   {typeof surfData.aiAnalysis === 'string' ? surfData.aiAnalysis : JSON.stringify(surfData.aiAnalysis)}
                 </ReactMarkdown>
-              </div>
+              </Card>
             </div>
           </div>
         )}
         {!loading && !error && !surfData && (
-          <p style={{ textAlign: 'center', opacity: 0.8 }}>
+          <p style={{ textAlign: 'center', color: theme.colors.text.secondary }}>
             Enter a beach name and date to get surf conditions
           </p>
         )}
