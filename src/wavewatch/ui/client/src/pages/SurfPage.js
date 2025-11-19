@@ -289,11 +289,7 @@ const SurfPage = () => {
                   <BestTimeCard key={index}>
                     <BestTimeHeader>
                       <BestTimeTitle>
-                        {new Date(time.time).toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        })}
+                        {time.time}
                       </BestTimeTitle>
                       {time.rating && (
                         <BestTimeRating>Rating: {time.rating}/100</BestTimeRating>

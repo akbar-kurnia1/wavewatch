@@ -15,7 +15,7 @@ A. **Comparison**: Compare the current NOAA data against the Break-Specific Requ
 B. **Analysis**: Provide ONLY the following analysis:
 1. **Overall Surf Rating** (1-100) for {selected_date} with brief reasoning
 2. **Best Time to Surf** on {selected_date} - Identify and provide details for ONLY the single best time period:
-   - The time range (e.g., "6:00 AM - 8:00 AM" or "11:00 AM - 12:00 PM")
+   - The time range (e.g., "6:00 AM - 7:00 AM" or "11:00 AM - 12:00 PM") - MUST be exactly 1 hour or less
    - A rating from 1-100 for that time period
    - The range of wave height in feet (e.g., "4.2-4.8ft" or "4.5ft")
    - The wave period rounded to the nearest whole number in seconds (e.g., "14s")
